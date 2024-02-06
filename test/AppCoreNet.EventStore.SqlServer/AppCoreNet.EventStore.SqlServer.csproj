@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Unix'">$(TargetFrameworks);net462</TargetFrameworks>
+    <RootNamespace>AppCoreNet.EventStore.SqlServer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AppCoreNet.EventStore.SqlServer\AppCoreNet.EventStore.SqlServer.csproj" />
+  </ItemGroup>
+
+</Project>

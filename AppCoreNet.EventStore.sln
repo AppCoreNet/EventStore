@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CEDF1589-0F97-440C-975B-D94F9AD220D4}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		AppCoreNet.ruleset = AppCoreNet.ruleset
+		CONTRIBUTING.md = CONTRIBUTING.md
+		Directory.Build.props = Directory.Build.props
+		GitVersion.yml = GitVersion.yml
+		global.json = global.json
+		LICENSE = LICENSE
+		README.md = README.md
+		stylecop.json = stylecop.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9E85A2A1-38E1-4B4F-B32B-06E7856B5C52}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{03CCC0AE-2D60-4CE9-B9B6-BFE672FF5744}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppCoreNet.EventStore.Abstractions", "src\AppCoreNet.EventStore.Abstractions\AppCoreNet.EventStore.Abstractions.csproj", "{84994A79-CFC8-4A50-9192-46379C29B0FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppCoreNet.EventStore.SqlServer", "src\AppCoreNet.EventStore.SqlServer\AppCoreNet.EventStore.SqlServer.csproj", "{FA256E79-DF06-4C51-B73B-0234A4F9CFC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppCoreNet.EventStore.SqlServer", "test\AppCoreNet.EventStore.SqlServer\AppCoreNet.EventStore.SqlServer.csproj", "{E9BD6720-0F87-42D2-8DC1-C8D33E980B5F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{84994A79-CFC8-4A50-9192-46379C29B0FB} = {9E85A2A1-38E1-4B4F-B32B-06E7856B5C52}
+		{FA256E79-DF06-4C51-B73B-0234A4F9CFC7} = {9E85A2A1-38E1-4B4F-B32B-06E7856B5C52}
+		{E9BD6720-0F87-42D2-8DC1-C8D33E980B5F} = {03CCC0AE-2D60-4CE9-B9B6-BFE672FF5744}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{84994A79-CFC8-4A50-9192-46379C29B0FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84994A79-CFC8-4A50-9192-46379C29B0FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84994A79-CFC8-4A50-9192-46379C29B0FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84994A79-CFC8-4A50-9192-46379C29B0FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA256E79-DF06-4C51-B73B-0234A4F9CFC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA256E79-DF06-4C51-B73B-0234A4F9CFC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA256E79-DF06-4C51-B73B-0234A4F9CFC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA256E79-DF06-4C51-B73B-0234A4F9CFC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9BD6720-0F87-42D2-8DC1-C8D33E980B5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9BD6720-0F87-42D2-8DC1-C8D33E980B5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9BD6720-0F87-42D2-8DC1-C8D33E980B5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9BD6720-0F87-42D2-8DC1-C8D33E980B5F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,12 @@
+assembly-versioning-scheme: Major
+assembly-file-versioning-scheme: MajorMinorPatchTag
+assembly-informational-format: '{SemVer}+{ShortSha}'
+continuous-delivery-fallback-tag: 'alpha'
+mode: 'ContinuousDeployment'
+branches:
+  main:
+    increment: Minor
+  pull-request:
+    tag: 'pr'
+ignore:
+  sha: []

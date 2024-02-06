@@ -1,0 +1,100 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - 'main'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'main'
+    types: [assigned, opened, synchronize, reopened]
+
+env:
+  BUILD_CONFIGURATION: Debug
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    name: .NET Build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            8.0.x
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration ${{env.BUILD_CONFIGURATION}} --no-restore
+      - name: Test
+        run: dotnet test --configuration ${{env.BUILD_CONFIGURATION}} --filter "Category!=Integration" --collect:"Code Coverage;Format=Cobertura" --logger trx --results-directory test-results --no-build
+      - name: Build packages
+        run: dotnet pack --configuration ${{env.BUILD_CONFIGURATION}} --output ./artifacts --no-build
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v3
+#        with:
+#          directory: ./test-results
+#          files: '*.cobertura.xml'
+#
+      - name: Upload artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: ./artifacts
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.os }}
+          path: ./test-results
+        if: ${{ always() }} # Always run this step even on failure
+
+  deploy-testing:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: testing
+    needs: build
+    name: Deploy Testing
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            8.0.x
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: ./artifacts
+      - name: Push packages
+        run: dotnet nuget push -s ${{vars.MYGET_URL}} -k ${{secrets.MYGET_API_KEY}} ./artifacts/*.nupkg
+
+  deploy-release:
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    environment: production
+    needs:
+      - build
+      - deploy-testing
+    name: Deploy Production
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            8.0.x
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: ./artifacts
+      - name: Push packages
+        run: dotnet nuget push -s ${{vars.NUGET_URL}} -k ${{secrets.NUGET_API_KEY}} ./artifacts/*.nupkg
