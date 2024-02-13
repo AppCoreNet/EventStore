@@ -13,12 +13,12 @@ as you keep the copyright notice intact when redistributing or otherwise reusing
 
 Latest development packages can be found on [MyGet](https://www.myget.org/gallery/appcorenet).
 
-| Package                                     | Description                                             |
-|---------------------------------------------|---------------------------------------------------------|
-| `AppCoreNet.EventStore`                     | Provides event store framework default implementations. |
-| `AppCoreNet.EventStore.Abstractions`        | Provides the public API of the event store framework.   |
-| `AppCoreNet.EventStore.EntityFrameworkCore` | Adds support for EntityFramework Core.                  |
-| `AppCoreNet.EventStore.MongoDB`             | Adds support for Mongo DB.                              |
+| Package                              | Description                                             |
+|--------------------------------------|---------------------------------------------------------|
+| `AppCoreNet.EventStore`              | Provides event store framework default implementations. |
+| `AppCoreNet.EventStore.Abstractions` | Provides the public API of the event store framework.   |
+| `AppCoreNet.EventStore.SqlServer`    | Adds support for Microsoft SQL Server.                  |
+| `AppCoreNet.EventStore.MongoDB`      | Adds support for Mongo DB.                              |
 
 ## Contributing
 

@@ -1,0 +1,83 @@
+using System;
+using System.Globalization;
+using AppCoreNet.Diagnostics;
+
+namespace AppCoreNet.EventStore;
+
+public readonly struct StreamState : IFormattable, IEquatable<StreamState>
+{
+    private const long AnyValue = -1;
+    private const long NoneValue = -2;
+
+    /// <summary>
+    /// Specifies that the stream can be at any position.
+    /// </summary>
+    public static readonly StreamState Any = new (AnyValue);
+
+    /// <summary>
+    /// Specifies that the stream should not exist.
+    /// </summary>
+    public static readonly StreamState None = new (NoneValue);
+
+    /// <summary>
+    /// Gets the value.
+    /// </summary>
+    public long Value { get; }
+
+    private StreamState(long value)
+    {
+        Value = value;
+    }
+
+    public static StreamState Position(long value)
+    {
+        Ensure.Arg.InRange(value, 0, long.MaxValue);
+        return new StreamState(value);
+    }
+
+    /// <inheritdoc />
+    public bool Equals(StreamState other)
+    {
+        return Value == other.Value;
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+    {
+        return obj is StreamState other && Equals(other);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return Value.GetHashCode();
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return ToString(null, CultureInfo.CurrentCulture);
+    }
+
+    /// <inheritdoc />
+    public string ToString(string? format, IFormatProvider formatProvider)
+    {
+        switch (Value)
+        {
+            case AnyValue:
+                return "any";
+            case NoneValue:
+                return "none";
+            default:
+                return Value.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    public static bool operator ==(StreamState left, StreamState right)
+        => left.Equals(right);
+
+    public static bool operator !=(StreamState left, StreamState right)
+        => !left.Equals(right);
+
+    public static implicit operator StreamState(long position) => Position(position);
+}
