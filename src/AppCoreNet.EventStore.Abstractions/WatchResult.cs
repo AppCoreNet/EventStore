@@ -1,32 +1,32 @@
-﻿using AppCoreNet.Diagnostics;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using AppCoreNet.Diagnostics;
 
 namespace AppCoreNet.EventStore;
 
+/// <summary>
+/// Represents the result of <see cref="IEventStore.WatchAsync"/>.
+/// </summary>
 public sealed class WatchResult
 {
     /// <summary>
-    /// Gets the token which can be used in subsequent calls.
+    /// Gets the position of the last observed event in the watched stream.
     /// </summary>
-    public string ContinuationToken { get; }
+    /// <remarks>
+    /// The position refers to the <see cref="EventMetadata.StreamPosition"/> when watch was invoked
+    /// for a specific stream. If watch was invoked for the $all stream it refers to the
+    /// <see cref="EventMetadata.GlobalPosition"/>.
+    /// </remarks>
+    public long Position { get; }
 
     /// <summary>
-    /// Gets the ID of the stream for which new events are available.
+    /// Initializes a new instance of the <see cref="WatchResult"/> class.
     /// </summary>
-    public string StreamId { get; }
-
-    /// <summary>
-    /// Gets the current stream position.
-    /// </summary>
-    public long StreamPosition { get; }
-
-    public WatchResult(string streamId, long streamPosition, string continuationToken)
+    /// <param name="position">The position of the last observed event.</param>
+    public WatchResult(long position)
     {
-        Ensure.Arg.NotEmpty(continuationToken);
-        Ensure.Arg.NotEmpty(streamId);
-        Ensure.Arg.InRange(streamPosition, 0, long.MaxValue);
-
-        StreamId = streamId;
-        ContinuationToken = continuationToken;
-        StreamPosition = streamPosition;
+        Ensure.Arg.InRange(position, 0, long.MaxValue);
+        Position = position;
     }
 }

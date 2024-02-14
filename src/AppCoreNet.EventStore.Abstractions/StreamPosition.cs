@@ -1,9 +1,15 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using System.Globalization;
 using AppCoreNet.Diagnostics;
 
 namespace AppCoreNet.EventStore;
 
+/// <summary>
+/// Specifies the position of a stream when reading or watching for new events.
+/// </summary>
 public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
 {
     private const long StartValue = -1;
@@ -29,7 +35,12 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
         Value = value;
     }
 
-    public static StreamPosition Position(long value)
+    /// <summary>
+    /// Creates an instance of <see cref="StreamPosition"/> with the provided <paramref name="value"/>.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <returns>The stream position.</returns>
+    public static StreamPosition FromValue(long value)
     {
         Ensure.Arg.InRange(value, 0, long.MaxValue);
         return new StreamPosition(value);
@@ -64,6 +75,8 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
     {
         switch (Value)
         {
+            case StartValue:
+                return "start";
             case EndValue:
                 return "end";
             default:
@@ -71,11 +84,28 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
         }
     }
 
+    /// <summary>
+    /// Compares two <see cref="StreamPosition"/> instances for equality.
+    /// </summary>
+    /// <param name="left">The first <see cref="StreamPosition"/>.</param>
+    /// <param name="right">The second <see cref="StreamPosition"/>.</param>
+    /// <returns><c>true</c> if both objects are equal; <c>false</c> otherwise.</returns>
     public static bool operator ==(StreamPosition left, StreamPosition right)
         => left.Equals(right);
 
+    /// <summary>
+    /// Compares two <see cref="StreamPosition"/> instances for inequality.
+    /// </summary>
+    /// <param name="left">The first <see cref="StreamPosition"/>.</param>
+    /// <param name="right">The second <see cref="StreamPosition"/>.</param>
+    /// <returns><c>true</c> if both objects are not equal; <c>false</c> otherwise.</returns>
     public static bool operator !=(StreamPosition left, StreamPosition right)
         => !left.Equals(right);
 
-    public static implicit operator StreamPosition(long position) => Position(position);
+    /// <summary>
+    /// Implicitly converts a <c>long</c> to an instance of <see cref="StreamPosition"/>.
+    /// </summary>
+    /// <param name="position">The value.</param>
+    /// <returns>The <see cref="StreamPosition"/>.</returns>
+    public static implicit operator StreamPosition(long position) => FromValue(position);
 }

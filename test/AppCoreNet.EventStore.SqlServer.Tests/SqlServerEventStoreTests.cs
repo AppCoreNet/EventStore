@@ -65,7 +65,7 @@ public class SqlServerEventStoreTests
     {
         -2 => StreamPosition.End,
         -1 => StreamPosition.Start,
-        _ => StreamPosition.Position(value)
+        _ => StreamPosition.FromValue(value)
     };
 
     private async Task<SqlServerEventStore<TestDbContext>> CreateEventStore(IServiceProvider sp)
@@ -80,8 +80,8 @@ public class SqlServerEventStoreTests
     [InlineData(-1L)]
     public async Task WritesInitialEvents(int stateValue)
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -89,8 +89,8 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
         };
 
         StreamState state = CreateStreamState(stateValue);
@@ -102,8 +102,8 @@ public class SqlServerEventStoreTests
     [InlineData(0L)]
     public async Task WritesAdditionalEvents(int stateValue)
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -111,14 +111,14 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
+            new EventEnvelope("TestCreated", "name"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
         events = new[]
         {
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestRenamed", "new_name"),
         };
 
         StreamState state = CreateStreamState(stateValue);
@@ -128,8 +128,8 @@ public class SqlServerEventStoreTests
     [Fact]
     public async Task ThrowsWhenWritingInitialEventWithWrongPosition()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -137,7 +137,7 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
+            new EventEnvelope("TestCreated", "name"),
         };
 
         await Assert.ThrowsAsync<EventStreamStateException>(
@@ -149,8 +149,8 @@ public class SqlServerEventStoreTests
     [InlineData(1L)]
     public async Task ThrowsWhenWritingAdditionalEventWithWrongPosition(long stateValue)
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -158,14 +158,14 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
+            new EventEnvelope("TestCreated", "name"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
         events = new[]
         {
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestRenamed", "new_name"),
         };
 
         StreamState state = CreateStreamState(stateValue);
@@ -177,8 +177,8 @@ public class SqlServerEventStoreTests
     [Fact]
     public async Task ReadsEventsFromStreamStartForward()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -186,9 +186,9 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
-            new EventEnvelope("new_name_2", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
+            new EventEnvelope("TestRenamed", "new_name_2"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
@@ -207,14 +207,14 @@ public class SqlServerEventStoreTests
                   new[] { events[0], events[1] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.Position));
+                       .Excluding(e => e.Metadata.StreamPosition));
     }
 
     [Fact]
     public async Task ReadsEventsFromStreamEndForward()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -222,9 +222,9 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
-            new EventEnvelope("new_name_2", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
+            new EventEnvelope("TestRenamed", "new_name_2"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
@@ -243,14 +243,14 @@ public class SqlServerEventStoreTests
                   new[] { events[2] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.Position));
+                       .Excluding(e => e.Metadata.StreamPosition));
     }
 
     [Fact]
     public async Task ReadsEventsFromStreamEndBackward()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -258,9 +258,9 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
-            new EventEnvelope("new_name_2", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
+            new EventEnvelope("TestRenamed", "new_name_2"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
@@ -279,14 +279,14 @@ public class SqlServerEventStoreTests
                   new[] { events[2], events[1] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.Position));
+                       .Excluding(e => e.Metadata.StreamPosition));
     }
 
     [Fact]
     public async Task ReadsEventsFromStreamStartBackward()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -294,9 +294,9 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
-            new EventEnvelope("new_name_2", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
+            new EventEnvelope("TestRenamed", "new_name_2"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
@@ -315,14 +315,14 @@ public class SqlServerEventStoreTests
                   new[] { events[0] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.Position));
+                       .Excluding(e => e.Metadata.StreamPosition));
     }
 
     [Fact]
     public async Task ReadsEventsFromStreamForward()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -330,16 +330,16 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
-            new EventEnvelope("new_name_2", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
+            new EventEnvelope("TestRenamed", "new_name_2"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
         IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
             streamId,
-            StreamPosition.Position(1),
+            StreamPosition.FromValue(1),
             StreamReadDirection.Forward,
             2);
 
@@ -351,14 +351,14 @@ public class SqlServerEventStoreTests
                   new[] { events[1], events[2] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.Position));
+                       .Excluding(e => e.Metadata.StreamPosition));
     }
 
     [Fact]
     public async Task ReadsEventsFromStreamBackward()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -366,16 +366,16 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
-            new EventEnvelope("new_name_2", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
+            new EventEnvelope("TestRenamed", "new_name_2"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
         IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
             streamId,
-            StreamPosition.Position(1),
+            StreamPosition.FromValue(1),
             StreamReadDirection.Backward,
             2);
 
@@ -387,7 +387,7 @@ public class SqlServerEventStoreTests
                   new[] { events[1], events[0] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.Position));
+                       .Excluding(e => e.Metadata.StreamPosition));
     }
 
     [Theory]
@@ -399,8 +399,8 @@ public class SqlServerEventStoreTests
     [InlineData(0, StreamReadDirection.Backward)]
     public async Task ReadsEventsFromUnknownStreamThrows(long positionValue, StreamReadDirection direction)
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
 
@@ -415,17 +415,17 @@ public class SqlServerEventStoreTests
     [Fact]
     public async Task WatchWithoutEventsReturnsNull()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
         await eventStore.DeleteAsync("$all");
 
-        TimeSpan timeout = TimeSpan.FromSeconds(5);
+        TimeSpan timeout = TimeSpan.FromSeconds(1);
         Stopwatch watch = new ();
         watch.Start();
 
-        WatchResult? result = await eventStore.WatchAsync(null, timeout);
+        WatchResult? result = await eventStore.WatchAsync("$all", StreamPosition.Start, timeout);
 
         result.Should()
               .BeNull();
@@ -437,8 +437,8 @@ public class SqlServerEventStoreTests
     [Fact]
     public async Task WatchWithEventsReturnsLatestVersion()
     {
-        using ServiceProvider sp = CreateServiceProvider();
-        using IServiceScope scope = sp.CreateScope();
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         SqlServerEventStore<TestDbContext> eventStore = await CreateEventStore(scope.ServiceProvider);
         await eventStore.DeleteAsync("$all");
@@ -447,26 +447,23 @@ public class SqlServerEventStoreTests
 
         var events = new[]
         {
-            new EventEnvelope("name", new EventMetadata("TestCreated")),
-            new EventEnvelope("new_name", new EventMetadata("TestRenamed")),
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
         };
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        WatchResult? result = await eventStore.WatchAsync(null, TimeSpan.FromSeconds(5));
+        WatchResult? result = await eventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1));
 
         result.Should()
               .NotBeNull();
 
-        result!.StreamId.Should()
-              .Be(streamId);
-
-        result.StreamPosition.Should()
+        result!.Position.Should()
               .Be(1);
 
         WatchResult lastResult = result;
 
-        result = await eventStore.WatchAsync(result.ContinuationToken, TimeSpan.FromSeconds(5));
+        result = await eventStore.WatchAsync(streamId, result.Position, TimeSpan.FromSeconds(1));
 
         result.Should()
               .BeNull();
@@ -474,9 +471,9 @@ public class SqlServerEventStoreTests
         await eventStore.WriteAsync(streamId + "-2", events, StreamState.None);
         await eventStore.WriteAsync(streamId, events, StreamState.Position(1));
 
-        result = await eventStore.WatchAsync(lastResult.ContinuationToken, TimeSpan.FromSeconds(5));
+        result = await eventStore.WatchAsync(streamId, lastResult.Position, TimeSpan.FromSeconds(5));
         lastResult = result!;
 
-        result = await eventStore.WatchAsync(lastResult.ContinuationToken, TimeSpan.FromSeconds(5));
+        _ = await eventStore.WatchAsync(streamId, result!.Position, TimeSpan.FromSeconds(5));
     }
 }

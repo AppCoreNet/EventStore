@@ -8,6 +8,8 @@ internal static class Constants
 
     public const int StreamIdMaxLength = 64;
 
+    public const string StreamIdAll = "$all";
+
     public const int EventTypeMaxLength = 128;
 
     public const string InsertEventsProcedureName = "sp_InsertEvents";

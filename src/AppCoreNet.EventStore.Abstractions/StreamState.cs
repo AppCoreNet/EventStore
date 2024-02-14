@@ -1,9 +1,15 @@
+// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
 using System;
 using System.Globalization;
 using AppCoreNet.Diagnostics;
 
 namespace AppCoreNet.EventStore;
 
+/// <summary>
+/// Specifies the expected state of a stream.
+/// </summary>
 public readonly struct StreamState : IFormattable, IEquatable<StreamState>
 {
     private const long AnyValue = -1;
@@ -29,6 +35,11 @@ public readonly struct StreamState : IFormattable, IEquatable<StreamState>
         Value = value;
     }
 
+    /// <summary>
+    /// Creates an instance of <see cref="StreamPosition"/> with the provided position.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <returns>The expected stream position.</returns>
     public static StreamState Position(long value)
     {
         Ensure.Arg.InRange(value, 0, long.MaxValue);
@@ -73,11 +84,28 @@ public readonly struct StreamState : IFormattable, IEquatable<StreamState>
         }
     }
 
+    /// <summary>
+    /// Compares two <see cref="StreamState"/> instances for equality.
+    /// </summary>
+    /// <param name="left">The first <see cref="StreamState"/>.</param>
+    /// <param name="right">The second <see cref="StreamState"/>.</param>
+    /// <returns><c>true</c> if both objects are equal; <c>false</c> otherwise.</returns>
     public static bool operator ==(StreamState left, StreamState right)
         => left.Equals(right);
 
+    /// <summary>
+    /// Compares two <see cref="StreamState"/> instances for inequality.
+    /// </summary>
+    /// <param name="left">The first <see cref="StreamState"/>.</param>
+    /// <param name="right">The second <see cref="StreamState"/>.</param>
+    /// <returns><c>true</c> if both objects are not equal; <c>false</c> otherwise.</returns>
     public static bool operator !=(StreamState left, StreamState right)
         => !left.Equals(right);
 
+    /// <summary>
+    /// Implicitly converts a <c>long</c> to an instance of <see cref="StreamState"/>.
+    /// </summary>
+    /// <param name="position">The value.</param>
+    /// <returns>The <see cref="StreamState"/>.</returns>
     public static implicit operator StreamState(long position) => Position(position);
 }

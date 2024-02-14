@@ -35,7 +35,7 @@ public interface IEventStore
     /// The number of events read may be less than the requested count if fewer events are available.
     /// </remarks>
     /// <param name="streamId">The ID of the event stream.</param>
-    /// <param name="position">The where to start reading from the stream. Note that the position is inclusive.</param>
+    /// <param name="position">The position where to start reading from the stream. Note that the position is inclusive.</param>
     /// <param name="direction">The direction when reading from the stream.</param>
     /// <param name="maxCount">The maximum number of events to read.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
@@ -48,10 +48,25 @@ public interface IEventStore
         int maxCount = 1,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Watches for new events in the store.
+    /// </summary>
+    /// <param name="streamId">The ID of the event stream.</param>
+    /// <param name="position">The last observed position in the event stream.</param>
+    /// <param name="timeout">Specifies how long to wait for new events to be available.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>The last observed position; <c>null</c> if timeout has elapsed.</returns>
     Task<WatchResult?> WatchAsync(
-        string? continuationToken,
+        string streamId,
+        StreamPosition position,
         TimeSpan timeout,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Deletes all events from an event stream.
+    /// </summary>
+    /// <param name="streamId">The ID of the event stream.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task DeleteAsync(string streamId, CancellationToken cancellationToken = default);
 }

@@ -36,6 +36,8 @@ public class JsonEventStoreSerializer : IEventStoreSerializer
     /// <inheritdoc />
     public object? Deserialize(string typeName, string? data)
     {
+        Ensure.Arg.NotEmpty(typeName);
+
         if (data == null)
             return null;
 

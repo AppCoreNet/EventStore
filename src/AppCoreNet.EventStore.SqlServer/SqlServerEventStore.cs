@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -24,27 +25,78 @@ public class SqlServerEventStore<TDbContext> : IEventStore
 
     public SqlServerEventStore(DbContextDataProvider<TDbContext> dataProvider, IEventStoreSerializer serializer)
     {
+        Ensure.Arg.NotNull(dataProvider);
+        Ensure.Arg.NotNull(serializer);
+
         _serializer = serializer;
         _dataProvider = dataProvider;
         _dbContext = _dataProvider.DbContext;
     }
 
+    private async Task<T> ExecuteQueryAsync<T>(
+        Func<CancellationToken, Task<T>> queryAction,
+        bool useTransaction = false,
+        CancellationToken cancellationToken = default)
+    {
+        ITransactionManager transactionManager = _dataProvider.TransactionManager;
+        ITransaction? transaction = null;
+
+        try
+        {
+            if (useTransaction && transactionManager.CurrentTransaction == null)
+            {
+                transaction = await transactionManager
+                                    .BeginTransactionAsync(IsolationLevel.Unspecified, cancellationToken)
+                                    .ConfigureAwait(false);
+            }
+
+            T result;
+            await using (transaction)
+            {
+                result = await queryAction(cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync(cancellationToken)
+                                     .ConfigureAwait(false);
+                }
+            }
+
+            return result;
+        }
+        catch (SqlException error)
+        {
+            throw new EventStoreException($"An error occured accessing the event store: {error.Message}", error);
+        }
+    }
+
+    [SuppressMessage(
+        "ReSharper",
+        "CoVariantArrayConversion",
+        Justification = "Parameters are only read.")]
     private async Task<T> ExecuteStoredProcedureAsync<T>(
         string procedureName,
         SqlParameter[] parameters,
-        CancellationToken cancellationToken)
+        bool useTransaction = false,
+        CancellationToken cancellationToken = default)
         where T : class
     {
         string parametersNames = string.Join(", ", parameters.Select(p => p.ParameterName));
         string sql = $"EXEC {procedureName} {parametersNames}";
 
-        IAsyncEnumerable<T> resultSet =
+        IQueryable<T> queryable =
             _dbContext.Set<T>()
-                     .FromSqlRaw(sql, parameters)
-                     .AsNoTracking()
-                     .AsAsyncEnumerable();
+                      .FromSqlRaw(sql, parameters)
+                      .AsNoTracking();
 
-        return await resultSet.FirstAsync(cancellationToken);
+        return await ExecuteQueryAsync(
+                async ct => await queryable.AsAsyncEnumerable()
+                                           .FirstAsync(ct)
+                                           .ConfigureAwait(false),
+                useTransaction,
+                cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private DataTable CreateEventDataTable(IEnumerable<object> events)
@@ -61,7 +113,7 @@ public class SqlServerEventStore<TDbContext> : IEventStore
         {
             dataTable.Rows.Add(
             [
-                @event.Metadata.EventType,
+                @event.EventType,
                 @event.Metadata.CreatedAt,
                 index,
                 _serializer.Serialize(@event.Data),
@@ -82,49 +134,33 @@ public class SqlServerEventStore<TDbContext> : IEventStore
         Ensure.Arg.NotEmpty(streamId);
         Ensure.Arg.NotNull(events);
 
-        ITransactionManager transactionManager = _dataProvider.TransactionManager;
-        ITransaction? transaction = null;
+        SqlParameter[] parameters =
+        [
+            new SqlParameter("@StreamId", streamId),
+            new SqlParameter("@ExpectedPosition", state.Value),
+            new SqlParameter("@Events", SqlDbType.Structured)
+            {
+                TypeName = Scripts.GetEventTableTypeName(_dbContext.Model),
+                Value = CreateEventDataTable(events),
+            },
+        ];
 
-        if (transactionManager.CurrentTransaction == null)
-        {
-            transaction = await transactionManager.BeginTransactionAsync(IsolationLevel.Unspecified, cancellationToken)
-                                                  .ConfigureAwait(false);
-        }
-
-        await using (transaction)
-        {
-            SqlParameter[] parameters =
-            [
-                new SqlParameter("@StreamId", streamId),
-                new SqlParameter("@ExpectedPosition", state.Value),
-                new SqlParameter("@Events", SqlDbType.Structured)
-                {
-                    TypeName = Scripts.GetEventTableTypeName(_dbContext.Model),
-                    Value = CreateEventDataTable(events),
-                },
-            ];
-
-            var result = await ExecuteStoredProcedureAsync<Model.WriteResult>(
+        Model.WriteResult result = await ExecuteStoredProcedureAsync<Model.WriteResult>(
                 Scripts.GetInsertEventsStoredProcedureName(_dbContext.Model),
                 parameters,
-                cancellationToken);
+                true,
+                cancellationToken)
+            .ConfigureAwait(false);
 
-            switch (result.StatusCode)
-            {
-                case 0:
-                    break;
-                case -1:
-                    throw new EventStreamStateException(streamId, state);
-                default:
-                    throw new NotImplementedException(
-                        $"Unknown status code '{result.StatusCode}' returned from stored procedure");
-            }
-
-            if (transaction != null)
-            {
-                await transaction.CommitAsync(cancellationToken)
-                                 .ConfigureAwait(false);
-            }
+        switch (result.StatusCode)
+        {
+            case 0:
+                break;
+            case -1:
+                throw new EventStreamStateException(streamId, state);
+            default:
+                throw new NotImplementedException(
+                    $"Unknown status code '{result.StatusCode}' returned from stored procedure");
         }
     }
 
@@ -149,21 +185,18 @@ public class SqlServerEventStore<TDbContext> : IEventStore
             {
                 if (position == StreamPosition.Start)
                 {
-                    events = events.OrderBy(e => e.Position)
-                                   .Take(maxCount);
+                    events = events.OrderBy(e => e.Position);
                 }
                 else if (position == StreamPosition.End)
                 {
-                    events = events
-                             .OrderByDescending(e => e.Position)
-                             .Take(1);
+                    events = events.OrderByDescending(e => e.Position);
+                    maxCount = 1;
                 }
                 else
                 {
                     events = events
                              .OrderBy(e => e.Position)
-                             .Where(e => e.Position >= position.Value)
-                             .Take(maxCount);
+                             .Where(e => e.Position >= position.Value);
                 }
 
                 break;
@@ -173,21 +206,18 @@ public class SqlServerEventStore<TDbContext> : IEventStore
             {
                 if (position == StreamPosition.Start)
                 {
-                    events = events.OrderBy(e => e.Position)
-                                   .Take(1);
+                    events = events.OrderBy(e => e.Position);
+                    maxCount = 1;
                 }
                 else if (position == StreamPosition.End)
                 {
-                    events = events
-                             .OrderByDescending(e => e.Position)
-                             .Take(maxCount);
+                    events = events.OrderByDescending(e => e.Position);
                 }
                 else
                 {
                     events = events
                              .OrderByDescending(e => e.Position)
-                             .Where(e => e.Position <= position.Value)
-                             .Take(maxCount);
+                             .Where(e => e.Position <= position.Value);
                 }
 
                 break;
@@ -197,18 +227,22 @@ public class SqlServerEventStore<TDbContext> : IEventStore
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
         }
 
-        var streamEvents =
-            await _dbContext.Set<Model.EventStream>()
-                            .AsNoTracking()
-                            .Where(s => s.StreamId == streamId)
-                            .Select(
-                                s =>
-                                    new
-                                    {
-                                        Events = events.Where(e => e.EventStreamId == s.Id)
-                                                       .ToList(),
-                                    })
-                            .FirstOrDefaultAsync(cancellationToken);
+        var streamEvents = await ExecuteQueryAsync(
+                async ct => await _dbContext.Set<Model.EventStream>()
+                                            .AsNoTracking()
+                                            .Where(s => s.StreamId == streamId)
+                                            .Select(
+                                                s =>
+                                                    new
+                                                    {
+                                                        Events = events.Where(e => e.EventStreamId == s.Id)
+                                                                       .Take(maxCount) // do not move Take() before Where()
+                                                                       .ToList(),
+                                                    })
+                                            .FirstOrDefaultAsync(ct)
+                                            .ConfigureAwait(false),
+                cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
         if (streamEvents == null)
         {
@@ -220,10 +254,12 @@ public class SqlServerEventStore<TDbContext> : IEventStore
         {
             result.Add(
                 new EventEnvelope(
+                    e.EventType,
                     _serializer.Deserialize(e.EventType, e.Data) !,
-                    new EventMetadata(e.EventType)
+                    new EventMetadata
                     {
-                        Position = e.Position,
+                        StreamPosition = e.Position,
+                        GlobalPosition = e.Sequence,
                         CreatedAt = e.CreatedAt,
                         Data = (Dictionary<string, string>?)_serializer.Deserialize(
                             Constants.StringDictionaryTypeName,
@@ -236,43 +272,30 @@ public class SqlServerEventStore<TDbContext> : IEventStore
 
     /// <inheritdoc />
     public async Task<WatchResult?> WatchAsync(
-        string? continuationToken,
+        string streamId,
+        StreamPosition position,
         TimeSpan timeout,
         CancellationToken cancellationToken = default)
     {
-        if (!long.TryParse(
-                continuationToken ?? "-1",
-                NumberStyles.Integer,
-                CultureInfo.InvariantCulture,
-                out long fromSequence))
-        {
-            throw new ArgumentException(
-                $"Argument value '{continuationToken}' is not in the correct format.",
-                nameof(continuationToken));
-        }
+        Ensure.Arg.NotEmpty(streamId);
 
         SqlParameter[] parameters =
         [
-            new SqlParameter("@FromSequence", fromSequence),
+            new SqlParameter("@StreamId", streamId),
+            new SqlParameter("@FromPosition", position.Value),
             new SqlParameter("@PollInterval", 125),
             new SqlParameter("@Timeout", (int)timeout.TotalMilliseconds),
         ];
 
-        var result = await ExecuteStoredProcedureAsync<Model.WatchResult>(
-            Scripts.GetWatchEventsStoredProcedureName(_dbContext.Model),
-            parameters,
-            cancellationToken);
+        Model.WatchResult result = await ExecuteStoredProcedureAsync<Model.WatchResult>(
+                Scripts.GetWatchEventsStoredProcedureName(_dbContext.Model),
+                parameters,
+                cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
-        if (result.StreamId == null)
-        {
-            // timeout without any new events
-            return null;
-        }
-
-        return new WatchResult(
-            result.StreamId,
-            (long)result.Position!,
-            Convert.ToString(result.Sequence, CultureInfo.InvariantCulture) !);
+        return result.Position.HasValue
+            ? new WatchResult((long)result.Position)
+            : null;
     }
 
     /// <inheritdoc />
@@ -280,41 +303,29 @@ public class SqlServerEventStore<TDbContext> : IEventStore
     {
         Ensure.Arg.NotEmpty(streamId);
 
-        ITransactionManager transactionManager = _dataProvider.TransactionManager;
-        ITransaction? transaction = null;
+        string sql;
+        SqlParameter[] parameters;
 
-        if (transactionManager.CurrentTransaction == null)
+        if (streamId == "$all")
         {
-            transaction = await transactionManager.BeginTransactionAsync(IsolationLevel.Unspecified, cancellationToken)
-                                                  .ConfigureAwait(false);
+            sql = Scripts.DeleteAllStreams(_dbContext.Model);
+            parameters = Array.Empty<SqlParameter>();
+        }
+        else
+        {
+            sql = Scripts.DeleteStream(_dbContext.Model);
+            parameters =
+            [
+                new SqlParameter("@StreamId", streamId)
+            ];
         }
 
-        await using (transaction)
-        {
-            string sql;
-            SqlParameter[] parameters = Array.Empty<SqlParameter>();
-
-            if (streamId == "$all")
-            {
-                sql = Scripts.DeleteAllStreams(_dbContext.Model);
-            }
-            else
-            {
-                sql = Scripts.DeleteStream(_dbContext.Model, streamId);
-                parameters =
-                [
-                    new SqlParameter("@StreamId", streamId)
-                ];
-            }
-
-            await _dbContext.Database.ExecuteSqlRawAsync(sql, parameters, cancellationToken)
-                            .ConfigureAwait(false);
-
-            if (transaction != null)
-            {
-                await transaction.CommitAsync(cancellationToken)
-                                 .ConfigureAwait(false);
-            }
-        }
+        await ExecuteQueryAsync(
+                async ct =>
+                    await _dbContext.Database.ExecuteSqlRawAsync(sql, parameters, ct)
+                                    .ConfigureAwait(false),
+                true,
+                cancellationToken)
+            .ConfigureAwait(false);
     }
 }

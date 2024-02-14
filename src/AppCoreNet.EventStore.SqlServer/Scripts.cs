@@ -118,25 +118,50 @@ internal static class Scripts
 
         return $"""
                 CREATE PROCEDURE [{schema}].{Constants.WatchEventsProcedureName} (
-                    @FromSequence BIGINT,
+                    @StreamId NVARCHAR({Constants.StreamIdMaxLength}),
+                    @FromPosition BIGINT,
                     @PollInterval INT,
                     @Timeout INT
                     )
                 AS
                 BEGIN
-                    DECLARE @StreamId AS NVARCHAR({Constants.StreamIdMaxLength})
-                    DECLARE @StreamSequence AS BIGINT;
                     DECLARE @StreamPosition AS BIGINT;
                     DECLARE @WaitTime AS VARCHAR(12) = CONVERT(VARCHAR(12), DATEADD(ms, @PollInterval, 0), 114);
 
-                    WHILE @StreamId IS NULL
+                    IF @FromPosition = -2
                     BEGIN
-                        SELECT TOP 1 @StreamId = StreamId, @StreamSequence = [Sequence], @StreamPosition = Position
-                            FROM [{schema}].EventStream
-                            WHERE [Sequence] > @FromSequence
-                            ORDER BY [Sequence];
+                        IF @StreamId = '{Constants.StreamIdAll}'
+                        BEGIN
+                            SELECT TOP 1 @FromPosition = [Sequence]
+                                FROM [{schema}].EventStream
+                                ORDER BY [Sequence] DESC;
+                        END
+                        ELSE
+                        BEGIN
+                            SELECT TOP 1 @FromPosition = Position
+                                FROM [{schema}].EventStream
+                                WHERE StreamId = @StreamId;
+                        END
+                        IF @FromPosition IS NULL SET @FromPosition = -1;
+                    END
 
-                        IF @StreamId IS NULL
+                    WHILE @StreamPosition IS NULL
+                    BEGIN
+                        IF @StreamId = '{Constants.StreamIdAll}'
+                        BEGIN
+                            SELECT TOP 1 @StreamPosition = [Sequence]
+                                FROM [{schema}].EventStream
+                                WHERE [Sequence] > @FromPosition
+                                ORDER BY [Sequence] DESC;
+                        END
+                        ELSE
+                        BEGIN
+                            SELECT TOP 1 @StreamPosition = Position
+                                FROM [{schema}].EventStream
+                                WHERE StreamId = @StreamId AND [Position] > @FromPosition;
+                        END
+
+                        IF @StreamPosition IS NULL
                         BEGIN
                             WAITFOR DELAY @WaitTime;
                             SET @Timeout = @Timeout - @PollInterval;
@@ -144,7 +169,7 @@ internal static class Scripts
                         END
                     END
 
-                    SELECT @StreamId AS StreamId, @StreamSequence AS [Sequence], @StreamPosition AS Position;
+                    SELECT @StreamPosition AS Position;
                 END
                 """;
     }
@@ -182,11 +207,11 @@ internal static class Scripts
                 """;
     }
 
-    public static string DeleteStream(string? schema, string streamId) =>
+    public static string DeleteStream(string? schema) =>
         $"DELETE FROM [{GetEventStoreSchema(schema)}].{nameof(Model.EventStream)} WHERE StreamId=@StreamId";
 
-    public static string DeleteStream(IModel model, string streamId) =>
-        DeleteStream(GetEventStoreSchema(model), streamId);
+    public static string DeleteStream(IModel model) =>
+        DeleteStream(GetEventStoreSchema(model));
 
     public static string DeleteAllStreams(string? schema) =>
         $"DELETE FROM [{GetEventStoreSchema(schema)}].{nameof(Model.EventStream)}";
