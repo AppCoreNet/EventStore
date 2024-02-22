@@ -18,7 +18,7 @@ internal static class TransactionManagerExtensions
         if (transactionManager.CurrentTransaction == null)
         {
             transaction = await transactionManager
-                                .BeginTransactionAsync(IsolationLevel.Unspecified, cancellationToken)
+                                .BeginTransactionAsync(cancellationToken)
                                 .ConfigureAwait(false);
         }
 
