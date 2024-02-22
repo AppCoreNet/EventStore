@@ -2,7 +2,7 @@ namespace AppCoreNet.EventStore;
 
 public interface IEventEnvelope
 {
-    string EventType { get; }
+    string EventTypeName { get; }
 
     object Data { get; }
 

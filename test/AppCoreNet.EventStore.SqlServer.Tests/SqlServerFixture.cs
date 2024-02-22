@@ -8,7 +8,9 @@ public class SqlServerTestFixture : IAsyncLifetime
 {
     private readonly MsSqlContainer _container = new MsSqlBuilder().Build();
 
-    public string ConnectionString => _container.GetConnectionString();
+    public string
+        ConnectionString => "Server=localhost;Database=eventstore;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=false;Connect Timeout=30;";
+        // _container.GetConnectionString();
 
     public async Task InitializeAsync()
     {

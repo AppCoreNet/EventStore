@@ -1,6 +1,6 @@
 namespace AppCoreNet.EventStore.SqlServer.Model;
 
-internal sealed class WriteResult
+internal sealed class WriteEventsResult
 {
     public int StatusCode { get; init; }
 

@@ -23,7 +23,7 @@ public interface IEventStore
     /// <returns>A task that represents the asynchronous write operation.</returns>
     /// <exception cref="EventStreamStateException">The version of the stream was not the expected one.</exception>
     Task WriteAsync(
-        string streamId,
+        StreamId streamId,
         IEnumerable<object> events,
         StreamState state,
         CancellationToken cancellationToken = default);
@@ -42,7 +42,7 @@ public interface IEventStore
     /// <returns>A task that represents the asynchronous read operation.</returns>
     /// <exception cref="EventStreamNotFoundException">The stream was not found.</exception>
     Task<IReadOnlyCollection<IEventEnvelope>> ReadAsync(
-        string streamId,
+        StreamId streamId,
         StreamPosition position,
         StreamReadDirection direction = StreamReadDirection.Forward,
         int maxCount = 1,
@@ -56,8 +56,8 @@ public interface IEventStore
     /// <param name="timeout">Specifies how long to wait for new events to be available.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The last observed position; <c>null</c> if timeout has elapsed.</returns>
-    Task<WatchResult?> WatchAsync(
-        string streamId,
+    Task<WatchEventsResult?> WatchAsync(
+        StreamId streamId,
         StreamPosition position,
         TimeSpan timeout,
         CancellationToken cancellationToken = default);
@@ -68,5 +68,5 @@ public interface IEventStore
     /// <param name="streamId">The ID of the event stream.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task DeleteAsync(string streamId, CancellationToken cancellationToken = default);
+    Task DeleteAsync(StreamId streamId, CancellationToken cancellationToken = default);
 }

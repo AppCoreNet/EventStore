@@ -16,7 +16,7 @@ public sealed class EventEnvelope : IEventEnvelope
     /// <summary>
     /// Gets the type name of the event.
     /// </summary>
-    public string EventType { get; }
+    public string EventTypeName { get; }
 
     /// <summary>
     /// Gets the event data.
@@ -29,27 +29,27 @@ public sealed class EventEnvelope : IEventEnvelope
     public EventMetadata Metadata { get; }
 
     public EventEnvelope(object data)
-        : this(GetEventType(data), data)
+        : this(GetEventTypeName(data), data)
     {
     }
 
-    public EventEnvelope(string eventType, object data)
-        : this(eventType, data, new EventMetadata())
+    public EventEnvelope(string eventTypeName, object data)
+        : this(eventTypeName, data, new EventMetadata())
     {
     }
 
-    public EventEnvelope(string eventType, object data, EventMetadata metadata)
+    public EventEnvelope(string eventTypeName, object data, EventMetadata metadata)
     {
-        Ensure.Arg.NotEmpty(eventType);
+        Ensure.Arg.NotEmpty(eventTypeName);
         Ensure.Arg.NotNull(data);
         Ensure.Arg.NotNull(metadata);
 
-        EventType = eventType;
+        EventTypeName = eventTypeName;
         Data = data;
         Metadata = metadata;
     }
 
-    private static string GetEventType(object data)
+    private static string GetEventTypeName(object data)
     {
         Ensure.Arg.NotNull(data);
 
@@ -59,6 +59,6 @@ public sealed class EventEnvelope : IEventEnvelope
             dataType.GetCustomAttributes<EventTypeAttribute>()
                     .FirstOrDefault();
 
-        return eventTypeAttribute?.EventType ?? dataType.FullName!;
+        return eventTypeAttribute?.EventTypeName ?? dataType.FullName!;
     }
 }

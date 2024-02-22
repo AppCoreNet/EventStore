@@ -4,7 +4,7 @@
     <TargetFrameworks>net8.0;net6.0;netstandard2.0;net462</TargetFrameworks>
     <Description>Provides public API for the AppCore .NET event store.</Description>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="AppCoreNet.Data.EntityFrameworkCore" Version="0.3.0-alpha.71" />
   </ItemGroup>

@@ -18,9 +18,9 @@ public class JsonEventStoreSerializerOptions
     public JsonSerializerOptions? JsonSerializerOptions { get; set; }
 
     /// <summary>
-    /// Gets the event type map.
+    /// Gets the type name map.
     /// </summary>
-    public IDictionary<string, Type> EventTypeMap { get; } = new Dictionary<string, Type>
+    public IDictionary<string, Type> TypeNameMap { get; } = new Dictionary<string, Type>
     {
         { "StringDictionary", typeof(Dictionary<string, string>) },
     };

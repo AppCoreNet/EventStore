@@ -4,24 +4,32 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations;
 
 public static class MigrationBuilderExtensions
 {
-    private static void CreateStoredProcedure(this MigrationBuilder builder, string sql)
+    private static void ExecuteSql(this MigrationBuilder builder, string sql)
     {
         builder.Sql($"EXEC('{sql.Replace("'", "''")}')");
     }
 
-    public static void CreateEventStoreProcedures(this MigrationBuilder builder, string? schema = null)
+    public static void CreateEventStore(this MigrationBuilder builder, string? schema = null)
     {
-        schema ??= Scripts.GetEventStoreSchema(schema);
+        foreach (string script in WriteEventsSqlStoredProcedure.GetCreateScripts(schema))
+        {
+            builder.ExecuteSql(script);
+        }
 
-        builder.CreateStoredProcedure(Scripts.CreateEventTableType(schema));
-        builder.CreateStoredProcedure(Scripts.CreateInsertEventsProcedure(schema));
-        builder.CreateStoredProcedure(Scripts.CreateWatchEventsProcedure(schema));
+        builder.ExecuteSql(WatchEventsStoredProcedure.GetCreateScript(schema));
+        builder.ExecuteSql(WatchSubscriptionsStoredProcedure.GetCreateScript(schema));
+        builder.ExecuteSql(BeginUpdateSubscriptionStoredProcedure.GetCreateScript(schema));
     }
 
-    public static void DropEventStoreProcedures(this MigrationBuilder builder, string? schema = null)
+    public static void DropEventStore(this MigrationBuilder builder, string? schema = null)
     {
-        builder.Sql(Scripts.DropWatchEventsProcedure(schema));
-        builder.Sql(Scripts.DropInsertEventsProcedure(schema));
-        builder.Sql(Scripts.DropEventTableType(schema));
+        foreach (string script in WriteEventsSqlStoredProcedure.GetDropScripts(schema))
+        {
+            builder.ExecuteSql(script);
+        }
+
+        builder.ExecuteSql(WatchEventsStoredProcedure.GetDropScript(schema));
+        builder.ExecuteSql(WatchSubscriptionsStoredProcedure.GetDropScript(schema));
+        builder.ExecuteSql(BeginUpdateSubscriptionStoredProcedure.GetDropScript(schema));
     }
 }

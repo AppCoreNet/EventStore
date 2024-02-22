@@ -1,6 +1,6 @@
 ﻿namespace AppCoreNet.EventStore.SqlServer.Model;
 
-internal sealed class WatchResult
+internal sealed class WatchEventsResult
 {
     public long? Position { get; set; }
 }

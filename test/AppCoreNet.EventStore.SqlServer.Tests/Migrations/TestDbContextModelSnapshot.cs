@@ -17,19 +17,37 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("AppCoreNet:EventStoreSchema", "events")
-                .HasAnnotation("ProductVersion", "6.0.26")
+                .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Entities.Event", b =>
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.BeginUpdateSubscriptionResult", b =>
+                {
+                    b.Property<int?>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("Position")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StreamId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SubscriptionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.Event", b =>
                 {
                     b.Property<long>("Sequence")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"), 0L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"), 0L);
 
                     b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -64,13 +82,13 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                     b.ToTable("Event", "events");
                 });
 
-            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Entities.EventStream", b =>
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.EventStream", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 0L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 0L);
 
                     b.Property<long>("Position")
                         .HasColumnType("bigint");
@@ -95,21 +113,76 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                     b.ToTable("EventStream", "events");
                 });
 
-            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Entities.WatchResult", b =>
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.EventSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 0L);
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Position")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("StreamId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SubscriptionId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
+
+                    b.HasIndex("Position");
+
+                    b.HasIndex("ProcessedAt");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.ToTable("EventSubscription", "events");
+                });
+
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.WatchEventsResult", b =>
                 {
                     b.Property<long?>("Position")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("Sequence")
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.WatchSubscriptionsResult", b =>
+                {
+                    b.Property<int?>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("Position")
                         .HasColumnType("bigint");
 
                     b.Property<string>("StreamId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToView(null);
+                    b.Property<string>("SubscriptionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
-            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Entities.WriteResult", b =>
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.WriteEventsResult", b =>
                 {
                     b.Property<long?>("Position")
                         .HasColumnType("bigint");
@@ -120,12 +193,14 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                     b.Property<int>("StatusCode")
                         .HasColumnType("int");
 
-                    b.ToView(null);
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
-            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Entities.Event", b =>
+            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.Event", b =>
                 {
-                    b.HasOne("AppCoreNet.EventStore.SqlServer.Entities.EventStream", "EventStream")
+                    b.HasOne("AppCoreNet.EventStore.SqlServer.Model.EventStream", "EventStream")
                         .WithMany()
                         .HasForeignKey("EventStreamId")
                         .OnDelete(DeleteBehavior.Cascade)

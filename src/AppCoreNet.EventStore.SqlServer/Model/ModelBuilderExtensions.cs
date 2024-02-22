@@ -9,11 +9,6 @@ public static class ModelBuilderExtensions
     {
         schema ??= builder.Model.GetDefaultSchema();
 
-        if (schema != null)
-        {
-            builder.HasAnnotation(Constants.EventStoreSchemaAnnotation, schema);
-        }
-
         EntityTypeBuilder<EventStream> eventStreamEntity = builder.Entity<EventStream>();
 
         eventStreamEntity.ToTable(nameof(EventStream), schema);
@@ -59,11 +54,43 @@ public static class ModelBuilderExtensions
         eventEntity.Property(e => e.Data)
                    .IsRequired();
 
-        builder.Entity<WatchResult>()
+        EntityTypeBuilder<EventSubscription> subscriptionEntity = builder.Entity<EventSubscription>();
+
+        subscriptionEntity.ToTable(nameof(EventSubscription), schema);
+
+        subscriptionEntity.HasKey(e => e.Id)
+                          .IsClustered();
+
+        subscriptionEntity.Property(e => e.Id)
+                          .UseIdentityColumn(seed: 0);
+
+        subscriptionEntity.Property(e => e.SubscriptionId)
+                          .HasMaxLength(Constants.SubscriptionIdMaxLength)
+                          .IsRequired();
+
+        subscriptionEntity.Property(e => e.StreamId)
+                          .IsRequired()
+                          .HasMaxLength(Constants.StreamIdMaxLength);
+
+        subscriptionEntity.HasIndex(e => e.SubscriptionId);
+
+        subscriptionEntity.HasIndex(e => e.Position);
+
+        subscriptionEntity.HasIndex(e => e.ProcessedAt);
+
+        builder.Entity<WatchEventsResult>()
                .HasNoKey()
                .ToView(null);
 
-        builder.Entity<WriteResult>()
+        builder.Entity<WriteEventsResult>()
+               .HasNoKey()
+               .ToView(null);
+
+        builder.Entity<WatchSubscriptionsResult>()
+               .HasNoKey()
+               .ToView(null);
+
+        builder.Entity<BeginUpdateSubscriptionResult>()
                .HasNoKey()
                .ToView(null);
 

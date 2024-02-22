@@ -10,7 +10,7 @@ internal sealed class EventStream
     /// <summary>
     /// Gets the ID of the stream.
     /// </summary>
-    public required string StreamId { get; init; }
+    required public string StreamId { get; init; }
 
     /// <summary>
     /// Gets the last sequence of the stream.

@@ -24,6 +24,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\src\AppCoreNet.EventStore.SqlServer\AppCoreNet.EventStore.SqlServer.csproj" />
+    <ProjectReference Include="..\AppCoreNet.EventStore.SpecificationTests\AppCoreNet.EventStore.SpecificationTests.csproj" />
   </ItemGroup>
 
 </Project>

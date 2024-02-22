@@ -41,7 +41,7 @@ public class JsonEventStoreSerializer : IEventStoreSerializer
         if (data == null)
             return null;
 
-        if (!_options.EventTypeMap.TryGetValue(typeName, out Type? type))
+        if (!_options.TypeNameMap.TryGetValue(typeName, out Type? type))
         {
             type = Type.GetType(typeName);
             if (type == null)

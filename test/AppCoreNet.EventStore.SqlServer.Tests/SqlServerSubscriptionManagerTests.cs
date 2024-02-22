@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
+using AppCoreNet.EventStore.Serialization;
 using AppCoreNet.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,11 +14,11 @@ namespace AppCoreNet.EventStore.SqlServer;
 
 [Collection(SqlServerTestCollection.Name)]
 [Trait("Category", "Integration")]
-public class SqlServerEventStoreTests : EventStoreTests, IAsyncLifetime
+public class SqlServerSubscriptionManagerTests : SubscriptionManagerTests, IAsyncLifetime
 {
     private readonly SqlServerTestFixture _sqlServerTestFixture;
 
-    public SqlServerEventStoreTests(SqlServerTestFixture sqlServerTestFixture)
+    public SqlServerSubscriptionManagerTests(SqlServerTestFixture sqlServerTestFixture)
     {
         _sqlServerTestFixture = sqlServerTestFixture;
     }
@@ -50,5 +52,10 @@ public class SqlServerEventStoreTests : EventStoreTests, IAsyncLifetime
     public Task DisposeAsync()
     {
         return Task.CompletedTask;
+    }
+
+    protected override async Task ProcessSubscriptionsAsync(ISubscriptionManager manager)
+    {
+        await ((SqlServerSubscriptionManager<TestDbContext>)manager).ProcessAsync(TimeSpan.FromSeconds(5));
     }
 }

@@ -15,15 +15,15 @@ public sealed class EventTypeAttribute : Attribute
     /// <summary>
     /// Gets the type name of the event.
     /// </summary>
-    public string EventType { get; }
+    public string EventTypeName { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EventTypeAttribute"/> class.
     /// </summary>
-    /// <param name="eventType">The type name of the event.</param>
-    public EventTypeAttribute(string eventType)
+    /// <param name="eventTypeName">The type name of the event.</param>
+    public EventTypeAttribute(string eventTypeName)
     {
-        Ensure.Arg.NotEmpty(eventType);
-        EventType = eventType;
+        Ensure.Arg.NotEmpty(eventTypeName);
+        EventTypeName = eventTypeName;
     }
 }

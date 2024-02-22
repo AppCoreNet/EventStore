@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AppCoreNet.EventStore.SqlServer.Migrations
 {
+    /// <inheritdoc />
     public partial class Initial : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
@@ -26,6 +28,25 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EventStream", x => x.Id)
+                        .Annotation("SqlServer:Clustered", true);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EventSubscription",
+                schema: "events",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "0, 1"),
+                    SubscriptionId = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    StreamId = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ProcessedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Position = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EventSubscription", x => x.Id)
                         .Annotation("SqlServer:Clustered", true);
                 });
 
@@ -82,15 +103,38 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                 column: "StreamId",
                 unique: true);
 
-            migrationBuilder.CreateEventStoreProcedures(schema: "events");
+            migrationBuilder.CreateIndex(
+                name: "IX_EventSubscription_Position",
+                schema: "events",
+                table: "EventSubscription",
+                column: "Position");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventSubscription_ProcessedAt",
+                schema: "events",
+                table: "EventSubscription",
+                column: "ProcessedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventSubscription_SubscriptionId",
+                schema: "events",
+                table: "EventSubscription",
+                column: "SubscriptionId");
+
+            migrationBuilder.CreateEventStore(schema: "events");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropEventStoreProcedures(schema: "events");
+            migrationBuilder.DropEventStore(schema: "events");
 
             migrationBuilder.DropTable(
                 name: "Event",
+                schema: "events");
+
+            migrationBuilder.DropTable(
+                name: "EventSubscription",
                 schema: "events");
 
             migrationBuilder.DropTable(
