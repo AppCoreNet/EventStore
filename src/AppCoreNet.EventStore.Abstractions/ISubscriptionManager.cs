@@ -13,5 +13,5 @@ public interface ISubscriptionManager
 
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
 
-    Task<WatchSubscriptionsResult?> WatchAsync(TimeSpan timeout, CancellationToken cancellationToken = default);
+    Task<WatchSubscriptionResult?> WatchAsync(TimeSpan timeout, CancellationToken cancellationToken = default);
 }

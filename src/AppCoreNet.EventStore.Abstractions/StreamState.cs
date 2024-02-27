@@ -2,6 +2,7 @@
 // Copyright (c) The AppCore .NET project.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using AppCoreNet.Diagnostics;
 
@@ -10,6 +11,7 @@ namespace AppCoreNet.EventStore;
 /// <summary>
 /// Specifies the expected state of a stream.
 /// </summary>
+[DebuggerDisplay("{ToString()}")]
 public readonly struct StreamState : IFormattable, IEquatable<StreamState>
 {
     private const long AnyValue = -1;
@@ -64,7 +66,10 @@ public readonly struct StreamState : IFormattable, IEquatable<StreamState>
         return Value.GetHashCode();
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Returns the string representation of this instance.
+    /// </summary>
+    /// <returns>The stream state represented as a string.</returns>
     public override string ToString()
     {
         return ToString(null, CultureInfo.CurrentCulture);

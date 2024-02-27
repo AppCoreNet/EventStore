@@ -8,7 +8,7 @@ namespace AppCoreNet.EventStore;
 /// <summary>
 /// Represents the result of <see cref="IEventStore.WatchAsync"/>.
 /// </summary>
-public sealed class WatchEventsResult
+public sealed class WatchEventResult
 {
     /// <summary>
     /// Gets the position of the last observed event in the watched stream.
@@ -21,10 +21,10 @@ public sealed class WatchEventsResult
     public long Position { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="WatchEventsResult"/> class.
+    /// Initializes a new instance of the <see cref="WatchEventResult"/> class.
     /// </summary>
     /// <param name="position">The position of the last observed event.</param>
-    public WatchEventsResult(long position)
+    public WatchEventResult(long position)
     {
         Ensure.Arg.InRange(position, 0, long.MaxValue);
         Position = position;

@@ -69,7 +69,7 @@ public sealed class SqlServerSubscriptionManager<TDbContext> : ISubscriptionMana
     }
 
     /// <inheritdoc />
-    public async Task<WatchSubscriptionsResult?> WatchAsync(
+    public async Task<WatchSubscriptionResult?> WatchAsync(
         TimeSpan timeout,
         CancellationToken cancellationToken = default)
     {
@@ -89,7 +89,7 @@ public sealed class SqlServerSubscriptionManager<TDbContext> : ISubscriptionMana
 
         return result.Id == null
             ? null
-            : new WatchSubscriptionsResult(result.SubscriptionId!, result.StreamId!, (long)result.Position!);
+            : new WatchSubscriptionResult(result.SubscriptionId!, result.StreamId!, (long)result.Position!);
     }
 
     /// <inheritdoc />

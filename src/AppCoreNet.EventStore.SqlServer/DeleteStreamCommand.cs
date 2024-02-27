@@ -8,7 +8,7 @@ internal sealed class DeleteStreamCommand : SqlTextCommand
 {
     private readonly string _schema;
 
-    required public string StreamId { get; init; }
+    required public StreamId StreamId { get; init; }
 
     public DeleteStreamCommand(DbContext dbContext, string? schema)
         : base(dbContext)
@@ -18,25 +18,26 @@ internal sealed class DeleteStreamCommand : SqlTextCommand
 
     protected override string GetCommandText()
     {
-        // TODO: add support for StreamId wildcards
-        if (StreamId != "$all")
-        {
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)} WHERE StreamId=@StreamId";
-        }
+        if (StreamId == StreamId.All)
+            return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)}";
 
-        return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)}";
+        if (StreamId.IsPrefix)
+            return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)} WHERE StreamId LIKE @StreamId + '%'";
+
+        if (StreamId.IsSuffix)
+            return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)} WHERE StreamId LIKE '%' + @StreamId";
+
+        return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)} WHERE StreamId=@StreamId";
     }
 
     protected override SqlParameter[] GetCommandParameters()
     {
-        if (StreamId != "$all")
-        {
-            return
-            [
-                new SqlParameter("@StreamId", StreamId)
-            ];
-        }
+        if (StreamId == StreamId.All)
+            return Array.Empty<SqlParameter>();
 
-        return Array.Empty<SqlParameter>();
+        return
+        [
+            new SqlParameter("@StreamId", StreamId.Value.Trim('*'))
+        ];
     }
 }

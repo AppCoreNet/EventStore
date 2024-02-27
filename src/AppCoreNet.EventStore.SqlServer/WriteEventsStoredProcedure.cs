@@ -16,7 +16,7 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
     private readonly string? _schema;
     private readonly IEventStoreSerializer _serializer;
 
-    required public string StreamId { get; init; }
+    required public StreamId StreamId { get; init; }
 
     required public long ExpectedPosition { get; init; }
 
@@ -112,11 +112,11 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
     private DataTable CreateEventDataTable()
     {
         var dataTable = new DataTable();
-        dataTable.Columns.Add(new DataColumn("EventType", typeof(string)));
-        dataTable.Columns.Add(new DataColumn("CreatedAt", typeof(DateTimeOffset)));
-        dataTable.Columns.Add(new DataColumn("Offset", typeof(int)));
-        dataTable.Columns.Add(new DataColumn("Data", typeof(string)));
-        dataTable.Columns.Add(new DataColumn("Metadata", typeof(string)));
+        dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.EventType), typeof(string)));
+        dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.CreatedAt), typeof(DateTimeOffset)));
+        dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.Offset), typeof(int)));
+        dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.Data), typeof(string)));
+        dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.Metadata), typeof(string)));
 
         IEnumerable<(IEventEnvelope, int index)> eventEnvelopes = Events.Select(
             (e, index) => (e as IEventEnvelope ?? new EventEnvelope(e), index));
@@ -140,7 +140,7 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
     {
         return
         [
-            new SqlParameter("@StreamId", StreamId),
+            new SqlParameter("@StreamId", StreamId.Value),
             new SqlParameter("@ExpectedPosition", ExpectedPosition),
             new SqlParameter("@Events", SqlDbType.Structured)
             {

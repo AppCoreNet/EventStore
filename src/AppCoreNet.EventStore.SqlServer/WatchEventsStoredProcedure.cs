@@ -8,7 +8,7 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
 {
     private const string ProcedureName = "WatchEvents";
 
-    required public string StreamId { get; init; }
+    required public StreamId StreamId { get; init; }
 
     required public StreamPosition FromPosition { get; init; }
 
@@ -92,7 +92,7 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
     {
         return
         [
-            new SqlParameter("@StreamId", StreamId),
+            new SqlParameter("@StreamId", StreamId.Value),
             new SqlParameter("@FromPosition", FromPosition.Value),
             new SqlParameter("@PollInterval", (int)PollInterval.TotalMilliseconds),
             new SqlParameter("@Timeout", (int)Timeout.TotalMilliseconds),

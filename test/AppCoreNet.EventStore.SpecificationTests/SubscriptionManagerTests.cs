@@ -57,7 +57,7 @@ public abstract class SubscriptionManagerTests
         await manager.DeleteAsync("$all");
         await manager.CreateAsync(subscriptionId, streamId);
 
-        WatchSubscriptionsResult? result = await manager.WatchAsync(TimeSpan.FromSeconds(5));
+        WatchSubscriptionResult? result = await manager.WatchAsync(TimeSpan.FromSeconds(5));
 
         result.Should()
               .NotBeNull();

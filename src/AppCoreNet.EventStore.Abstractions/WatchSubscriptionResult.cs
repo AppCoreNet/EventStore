@@ -5,7 +5,7 @@ namespace AppCoreNet.EventStore;
 /// <summary>
 /// Represents the result of <see cref="ISubscriptionManager.WatchAsync"/>.
 /// </summary>
-public sealed class WatchSubscriptionsResult
+public sealed class WatchSubscriptionResult
 {
     /// <summary>
     /// Gets the ID of the subscription.
@@ -28,12 +28,12 @@ public sealed class WatchSubscriptionsResult
     public long Position { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="WatchSubscriptionsResult"/> class.
+    /// Initializes a new instance of the <see cref="WatchSubscriptionResult"/> class.
     /// </summary>
     /// <param name="subscriptionId">The ID of the subscription.</param>
     /// <param name="streamId">The ID of the subscribed stream.</param>
     /// <param name="position">The position of the next event to be processed by the subscription.</param>
-    public WatchSubscriptionsResult(string subscriptionId, StreamId streamId, long position)
+    public WatchSubscriptionResult(string subscriptionId, StreamId streamId, long position)
     {
         Ensure.Arg.NotEmpty(subscriptionId);
         Ensure.Arg.NotNull(streamId);

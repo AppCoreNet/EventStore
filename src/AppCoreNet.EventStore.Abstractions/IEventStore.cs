@@ -56,7 +56,7 @@ public interface IEventStore
     /// <param name="timeout">Specifies how long to wait for new events to be available.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The last observed position; <c>null</c> if timeout has elapsed.</returns>
-    Task<WatchEventsResult?> WatchAsync(
+    Task<WatchEventResult?> WatchAsync(
         StreamId streamId,
         StreamPosition position,
         TimeSpan timeout,

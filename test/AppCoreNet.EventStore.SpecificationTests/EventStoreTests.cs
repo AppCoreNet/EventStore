@@ -399,7 +399,7 @@ public abstract class EventStoreTests
         Stopwatch watch = new ();
         watch.Start();
 
-        WatchEventsResult? result = await eventStore.WatchAsync("$all", StreamPosition.Start, timeout);
+        WatchEventResult? result = await eventStore.WatchAsync("$all", StreamPosition.Start, timeout);
 
         result.Should()
               .BeNull();
@@ -427,7 +427,7 @@ public abstract class EventStoreTests
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        WatchEventsResult? result = await eventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1));
+        WatchEventResult? result = await eventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1));
 
         result.Should()
               .NotBeNull();
@@ -435,7 +435,7 @@ public abstract class EventStoreTests
         result!.Position.Should()
               .Be(1);
 
-        WatchEventsResult lastResult = result;
+        WatchEventResult lastResult = result;
 
         result = await eventStore.WatchAsync(streamId, result.Position, TimeSpan.FromSeconds(1));
 

@@ -50,7 +50,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
 
         var procedure = new WriteEventsSqlStoredProcedure(_dbContext, _options.SchemaName, _serializer)
         {
-            StreamId = streamId.Value,
+            StreamId = streamId,
             ExpectedPosition = state.Value,
             Events = events,
         };
@@ -120,7 +120,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
     }
 
     /// <inheritdoc />
-    public async Task<WatchEventsResult?> WatchAsync(
+    public async Task<WatchEventResult?> WatchAsync(
         StreamId streamId,
         StreamPosition position,
         TimeSpan timeout,
@@ -128,9 +128,10 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
     {
         Ensure.Arg.NotNull(streamId);
 
+        // TODO: watch wildcard streams
         var procedure = new WatchEventsStoredProcedure(_dbContext, _options.SchemaName)
         {
-            StreamId = streamId.Value,
+            StreamId = streamId,
             FromPosition = position,
             PollInterval = _options.PollInterval,
             Timeout = timeout,
@@ -141,7 +142,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
                            .ConfigureAwait(false);
 
         return result.Position.HasValue
-            ? new WatchEventsResult((long)result.Position)
+            ? new WatchEventResult((long)result.Position)
             : null;
     }
 
@@ -152,7 +153,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
 
         var command = new DeleteStreamCommand(_dbContext, _options.SchemaName)
         {
-            StreamId = streamId.Value,
+            StreamId = streamId,
         };
 
         await command.ExecuteAsync(cancellationToken)
