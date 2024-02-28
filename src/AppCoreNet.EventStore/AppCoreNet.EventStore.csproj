@@ -10,6 +10,10 @@
     <ProjectReference Include="..\AppCoreNet.EventStore.Abstractions\AppCoreNet.EventStore.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AppCoreNet.Extensions.DependencyInjection.Abstractions" Version="0.5.1" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)'!='net8.0'">
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="System.Text.Json" Version="6.0.9" />
@@ -19,5 +23,5 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.1" />
   </ItemGroup>
-  
+
 </Project>
