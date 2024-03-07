@@ -18,7 +18,6 @@ public static class MigrationBuilderExtensions
 
         builder.ExecuteSql(WatchEventsStoredProcedure.GetCreateScript(schema));
         builder.ExecuteSql(WatchSubscriptionsStoredProcedure.GetCreateScript(schema));
-        builder.ExecuteSql(BeginUpdateSubscriptionStoredProcedure.GetCreateScript(schema));
     }
 
     public static void DropEventStore(this MigrationBuilder builder, string? schema = null)
@@ -30,6 +29,5 @@ public static class MigrationBuilderExtensions
 
         builder.ExecuteSql(WatchEventsStoredProcedure.GetDropScript(schema));
         builder.ExecuteSql(WatchSubscriptionsStoredProcedure.GetDropScript(schema));
-        builder.ExecuteSql(BeginUpdateSubscriptionStoredProcedure.GetDropScript(schema));
     }
 }

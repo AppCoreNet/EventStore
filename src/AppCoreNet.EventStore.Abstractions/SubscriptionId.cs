@@ -8,17 +8,17 @@ using AppCoreNet.Diagnostics;
 namespace AppCoreNet.EventStore;
 
 /// <summary>
-/// Represents a stream ID.
+/// Represents a subscription ID.
 /// </summary>
 [DebuggerDisplay("{Value}")]
-public sealed class StreamId : IEquatable<StreamId>
+public sealed class SubscriptionId : IEquatable<SubscriptionId>
 {
     private readonly string _id;
 
     /// <summary>
-    /// Gets the special ID which refers to all existing streams.
+    /// Gets the special ID which refers to all existing subscriptions.
     /// </summary>
-    public static readonly StreamId All = new ("*");
+    public static readonly SubscriptionId All = new ("*");
 
     /// <summary>
     /// Gets the ID value.
@@ -41,10 +41,10 @@ public sealed class StreamId : IEquatable<StreamId>
     public bool IsWildcard => _id.Contains("*");
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="StreamId"/> class.
+    /// Initializes a new instance of the <see cref="SubscriptionId"/> class.
     /// </summary>
-    /// <param name="id">The stream ID, may start or end with wildcard (star) character.</param>
-    public StreamId(string id)
+    /// <param name="id">The subscription ID, may start or end with wildcard (star) character.</param>
+    public SubscriptionId(string id)
     {
         Ensure.Arg.NotEmpty(id);
 
@@ -54,29 +54,29 @@ public sealed class StreamId : IEquatable<StreamId>
         if ((firstStarIndex >= 0 && firstStarIndex != lastStarIndex)
             || (firstStarIndex >= 0 && firstStarIndex != lastStarIndex && lastStarIndex != id.Length - 1))
         {
-            throw new ArgumentException("Stream ID must not contain more than two wildcard characters.", nameof(id));
+            throw new ArgumentException("Subscription ID must not contain more than two wildcard characters.", nameof(id));
         }
 
         _id = id;
     }
 
     /// <summary>
-    /// Creates a <see cref="StreamId"/> instance which matches streams by prefix.
+    /// Creates a <see cref="SubscriptionId"/> instance which matches subscriptions by prefix.
     /// </summary>
-    /// <param name="prefix">The prefix of the stream ID.</param>
-    /// <returns>A new <see cref="StreamId"/> instance.</returns>
-    public static StreamId Prefix(string prefix)
+    /// <param name="prefix">The prefix of the subscription ID.</param>
+    /// <returns>A new <see cref="SubscriptionId"/> instance.</returns>
+    public static SubscriptionId Prefix(string prefix)
     {
         Ensure.Arg.NotEmpty(prefix);
         return new ($"{prefix}*");
     }
 
     /// <summary>
-    /// Creates a <see cref="StreamId"/> instance which matches streams by suffix.
+    /// Creates a <see cref="SubscriptionId"/> instance which matches subscriptions by suffix.
     /// </summary>
-    /// <param name="suffix">The suffix of the stream ID.</param>
-    /// <returns>A new <see cref="StreamId"/> instance.</returns>
-    public static StreamId Suffix(string suffix)
+    /// <param name="suffix">The suffix of the subscription ID.</param>
+    /// <returns>A new <see cref="SubscriptionId"/> instance.</returns>
+    public static SubscriptionId Suffix(string suffix)
     {
         Ensure.Arg.NotEmpty(suffix);
         return new ($"*{suffix}");
@@ -92,7 +92,7 @@ public sealed class StreamId : IEquatable<StreamId>
     }
 
     /// <inheritdoc />
-    public bool Equals(StreamId? other)
+    public bool Equals(SubscriptionId? other)
     {
         if (ReferenceEquals(null, other))
         {
@@ -110,7 +110,7 @@ public sealed class StreamId : IEquatable<StreamId>
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return ReferenceEquals(this, obj) || (obj is StreamId other && Equals(other));
+        return ReferenceEquals(this, obj) || (obj is SubscriptionId other && Equals(other));
     }
 
     /// <inheritdoc />
@@ -120,31 +120,31 @@ public sealed class StreamId : IEquatable<StreamId>
     }
 
     /// <summary>
-    /// Compares two <see cref="StreamId"/> instances for equality.
+    /// Compares two <see cref="SubscriptionId"/> instances for equality.
     /// </summary>
-    /// <param name="left">The first <see cref="StreamId"/>.</param>
-    /// <param name="right">The second <see cref="StreamId"/>.</param>
+    /// <param name="left">The first <see cref="SubscriptionId"/>.</param>
+    /// <param name="right">The second <see cref="SubscriptionId"/>.</param>
     /// <returns><c>true</c> if both objects are equal; <c>false</c> otherwise.</returns>
-    public static bool operator ==(StreamId? left, StreamId? right)
+    public static bool operator ==(SubscriptionId? left, SubscriptionId? right)
     {
         return Equals(left, right);
     }
 
     /// <summary>
-    /// Compares two <see cref="StreamId"/> instances for inequality.
+    /// Compares two <see cref="SubscriptionId"/> instances for inequality.
     /// </summary>
-    /// <param name="left">The first <see cref="StreamId"/>.</param>
-    /// <param name="right">The second <see cref="StreamId"/>.</param>
+    /// <param name="left">The first <see cref="SubscriptionId"/>.</param>
+    /// <param name="right">The second <see cref="SubscriptionId"/>.</param>
     /// <returns><c>true</c> if both objects are not equal; <c>false</c> otherwise.</returns>
-    public static bool operator !=(StreamId? left, StreamId? right)
+    public static bool operator !=(SubscriptionId? left, SubscriptionId? right)
     {
         return !Equals(left, right);
     }
 
     /// <summary>
-    /// Implicitly converts a <c>string</c> to an instance of <see cref="StreamId"/>.
+    /// Implicitly converts a <c>string</c> to an instance of <see cref="SubscriptionId"/>.
     /// </summary>
     /// <param name="id">The value.</param>
-    /// <returns>The <see cref="StreamId"/>.</returns>
-    public static implicit operator StreamId(string id) => new (id);
+    /// <returns>The <see cref="SubscriptionId"/>.</returns>
+    public static implicit operator SubscriptionId(string id) => new (id);
 }

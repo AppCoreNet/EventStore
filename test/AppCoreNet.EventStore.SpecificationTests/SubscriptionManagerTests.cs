@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AppCoreNet.Extensions.DependencyInjection;
 using FluentAssertions;
@@ -7,7 +9,7 @@ using Xunit;
 
 namespace AppCoreNet.EventStore;
 
-public abstract class SubscriptionManagerTests
+public abstract class SubscriptionManagerTests : IAsyncLifetime
 {
     protected ServiceProvider CreateServiceProvider()
     {
@@ -27,15 +29,51 @@ public abstract class SubscriptionManagerTests
                     });
     }
 
+    async Task IAsyncLifetime.InitializeAsync()
+    {
+        await InitializeAsync();
+    }
+
+    async Task IAsyncLifetime.DisposeAsync()
+    {
+        await DisposeAsync();
+    }
+
+    protected virtual async Task InitializeAsync()
+    {
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
+
+        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
+        await manager.DeleteAsync(SubscriptionId.All);
+
+        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
+        await eventStore.DeleteAsync(StreamId.All);
+    }
+
+    protected virtual Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    private async Task CreateEvents(IServiceProvider serviceProvider, StreamId streamId)
+    {
+        var eventStore = serviceProvider.GetRequiredService<IEventStore>();
+        var events = new[]
+        {
+            new EventEnvelope("TestCreated", "name"),
+        };
+        await eventStore.WriteAsync(streamId, events, StreamState.None);
+    }
+
     [Fact]
     public async Task CreatesSubscription()
     {
         await using ServiceProvider sp = CreateServiceProvider();
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
-        var manager = sp.GetRequiredService<ISubscriptionManager>();
-
-        await manager.CreateAsync(Guid.NewGuid().ToString("N"), "$all");
+        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
+        await manager.CreateAsync(Guid.NewGuid().ToString("N"), StreamId.All);
     }
 
     [Fact]
@@ -44,17 +82,12 @@ public abstract class SubscriptionManagerTests
         await using ServiceProvider sp = CreateServiceProvider();
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
-        string subscriptionId = Guid.NewGuid().ToString("N");
+        SubscriptionId subscriptionId = Guid.NewGuid().ToString("N");
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var eventStore = sp.GetRequiredService<IEventStore>();
-        await eventStore.DeleteAsync(StreamId.All);
-        await eventStore.WriteAsync(
-            streamId, new[] { new EventEnvelope("TestCreated", "name") }, StreamState.None);
+        await CreateEvents(scope.ServiceProvider, streamId);
 
-        var manager = sp.GetRequiredService<ISubscriptionManager>();
-
-        await manager.DeleteAsync("$all");
+        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
         await manager.CreateAsync(subscriptionId, streamId);
 
         WatchSubscriptionResult? result = await manager.WatchAsync(TimeSpan.FromSeconds(5));
@@ -63,7 +96,7 @@ public abstract class SubscriptionManagerTests
               .NotBeNull();
 
         result!.SubscriptionId.Should()
-              .Be(subscriptionId);
+               .Be(subscriptionId);
 
         result.StreamId.Should()
               .Be(streamId);
@@ -72,24 +105,70 @@ public abstract class SubscriptionManagerTests
               .Be(0);
     }
 
-    protected abstract Task ProcessSubscriptionsAsync(ISubscriptionManager manager);
+    [Fact]
+    public async Task ConcurrentWatchOnlySucceedsOnce()
+    {
+        await using ServiceProvider sp1 = CreateServiceProvider();
+        await using AsyncServiceScope scope1 = sp1.CreateAsyncScope();
+        await using AsyncServiceScope scope2 = sp1.CreateAsyncScope();
+
+        SubscriptionId subscriptionId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        await CreateEvents(scope1.ServiceProvider, streamId);
+
+        var manager1 = scope1.ServiceProvider.GetRequiredService<ISubscriptionManager>();
+        await manager1.CreateAsync(subscriptionId, StreamId.All);
+
+        using IDisposable transaction1 = await BeginTransaction(scope1.ServiceProvider);
+        WatchSubscriptionResult? watch1 = await manager1.WatchAsync(TimeSpan.FromSeconds(0));
+
+        watch1.Should()
+              .NotBeNull();
+
+        var manager2 = scope2.ServiceProvider.GetRequiredService<ISubscriptionManager>();
+        using IDisposable transaction2 = await BeginTransaction(scope2.ServiceProvider);
+        WatchSubscriptionResult? watch2 = await manager2.WatchAsync(TimeSpan.FromSeconds(0));
+
+        watch2.Should()
+              .BeNull();
+    }
 
     [Fact]
-    public async Task ProcessesSubscriptions()
+    public async Task WatchAndUpdateSucceedsOnceWithoutNewEvents()
     {
         await using ServiceProvider sp = CreateServiceProvider();
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        SubscriptionId subscriptionId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var eventStore = sp.GetRequiredService<IEventStore>();
-        await eventStore.WriteAsync(
-            streamId, new[] { new EventEnvelope("TestCreated", "name") }, StreamState.None);
+        await CreateEvents(scope.ServiceProvider, streamId);
 
-        var manager = sp.GetRequiredService<ISubscriptionManager>();
+        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        await manager.CreateAsync(Guid.NewGuid().ToString("N"), streamId);
+        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
+        await manager.CreateAsync(subscriptionId, streamId);
 
-        await ProcessSubscriptionsAsync(manager);
+        using IDisposable transaction = await BeginTransaction(scope.ServiceProvider);
+        WatchSubscriptionResult? watch = await manager.WatchAsync(TimeSpan.FromSeconds(0));
+
+        watch.Should()
+             .NotBeNull();
+
+        IReadOnlyCollection<IEventEnvelope> events = await eventStore.ReadAsync(watch!.StreamId, watch.Position);
+        await manager.UpdateAsync(subscriptionId, events.Last().Metadata.GlobalPosition);
+
+        await CommitTransaction(transaction);
+
+        using IDisposable transaction2 = await BeginTransaction(scope.ServiceProvider);
+        watch = await manager.WatchAsync(TimeSpan.FromSeconds(0));
+
+        watch.Should()
+             .BeNull();
     }
+
+    protected abstract Task<IDisposable> BeginTransaction(IServiceProvider serviceProvider);
+
+    protected abstract Task CommitTransaction(IDisposable transaction);
 }

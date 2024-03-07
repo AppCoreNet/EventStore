@@ -9,7 +9,7 @@ using Xunit;
 
 namespace AppCoreNet.EventStore;
 
-public abstract class EventStoreTests
+public abstract class EventStoreTests : IAsyncLifetime
 {
     protected ServiceProvider CreateServiceProvider()
     {
@@ -42,6 +42,30 @@ public abstract class EventStoreTests
         -1 => StreamPosition.Start,
         _ => StreamPosition.FromValue(value)
     };
+
+    async Task IAsyncLifetime.InitializeAsync()
+    {
+        await InitializeAsync();
+    }
+
+    async Task IAsyncLifetime.DisposeAsync()
+    {
+        await DisposeAsync();
+    }
+
+    protected virtual async Task InitializeAsync()
+    {
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
+
+        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
+        await eventStore.DeleteAsync(StreamId.All);
+    }
+
+    protected virtual Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     [Theory]
     [InlineData(-2L)]
@@ -101,7 +125,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -122,7 +146,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -150,7 +174,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -187,7 +211,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -224,7 +248,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -261,7 +285,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -298,7 +322,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -335,7 +359,7 @@ public abstract class EventStoreTests
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {
@@ -380,7 +404,7 @@ public abstract class EventStoreTests
 
         StreamPosition streamPosition = CreateStreamPosition(positionValue);
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         await Assert.ThrowsAsync<EventStreamNotFoundException>(
             async () => await eventStore.ReadAsync(streamId, streamPosition, direction));
@@ -393,7 +417,6 @@ public abstract class EventStoreTests
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-        await eventStore.DeleteAsync("$all");
 
         TimeSpan timeout = TimeSpan.FromSeconds(1);
         Stopwatch watch = new ();
@@ -415,9 +438,8 @@ public abstract class EventStoreTests
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-        await eventStore.DeleteAsync("$all");
 
-        string streamId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
 
         var events = new[]
         {

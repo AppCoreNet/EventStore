@@ -6,7 +6,7 @@ internal static class Constants
 
     public const int SubscriptionIdMaxLength = 64;
 
-    public const string StreamIdAll = "$all";
+    public const string StreamIdAll = "*";
 
     public const int EventTypeMaxLength = 128;
 

@@ -7,9 +7,9 @@ internal sealed class CreateSubscriptionCommand : SqlTextCommand
 {
     private readonly string _schema;
 
-    required public string SubscriptionId { get; init; }
+    required public SubscriptionId SubscriptionId { get; init; }
 
-    required public string StreamId { get; init; }
+    required public StreamId StreamId { get; init; }
 
     public CreateSubscriptionCommand(DbContext dbContext, string? schema)
         : base(dbContext)
@@ -26,8 +26,8 @@ internal sealed class CreateSubscriptionCommand : SqlTextCommand
     {
         return
         [
-            new SqlParameter("@SubscriptionId", SubscriptionId),
-            new SqlParameter("@StreamId", StreamId),
+            new SqlParameter("@SubscriptionId", SubscriptionId.Value),
+            new SqlParameter("@StreamId", StreamId.Value),
         ];
     }
 }

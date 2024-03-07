@@ -90,10 +90,6 @@ public static class ModelBuilderExtensions
                .HasNoKey()
                .ToView(null);
 
-        builder.Entity<BeginUpdateSubscriptionResult>()
-               .HasNoKey()
-               .ToView(null);
-
         return builder;
     }
 }

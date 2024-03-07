@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
-using AppCoreNet.EventStore.Serialization;
 using AppCoreNet.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +13,7 @@ namespace AppCoreNet.EventStore.SqlServer;
 
 [Collection(SqlServerTestCollection.Name)]
 [Trait("Category", "Integration")]
-public class SqlServerSubscriptionManagerTests : SubscriptionManagerTests, IAsyncLifetime
+public class SqlServerSubscriptionManagerTests : SubscriptionManagerTests
 {
     private readonly SqlServerTestFixture _sqlServerTestFixture;
 
@@ -41,21 +40,29 @@ public class SqlServerSubscriptionManagerTests : SubscriptionManagerTests, IAsyn
             });
     }
 
-    public async Task InitializeAsync()
+    protected override async Task InitializeAsync()
     {
         await using ServiceProvider sp = CreateServiceProvider();
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
         var provider = scope.ServiceProvider.GetRequiredService<DbContextDataProvider<TestDbContext>>();
         await provider.DbContext.Database.MigrateAsync();
+
+        await base.InitializeAsync();
     }
 
-    public Task DisposeAsync()
+    protected override async Task DisposeAsync()
     {
-        return Task.CompletedTask;
+        await base.DisposeAsync();
     }
 
-    protected override async Task ProcessSubscriptionsAsync(ISubscriptionManager manager)
+    protected override async Task<IDisposable> BeginTransaction(IServiceProvider serviceProvider)
     {
-        await ((SqlServerSubscriptionManager<TestDbContext>)manager).ProcessAsync(TimeSpan.FromSeconds(5));
+        var provider = serviceProvider.GetRequiredService<DbContextDataProvider<TestDbContext>>();
+        return await provider.TransactionManager.BeginTransactionAsync();
+    }
+
+    protected override async Task CommitTransaction(IDisposable transaction)
+    {
+        await ((ITransaction)transaction).CommitAsync();
     }
 }

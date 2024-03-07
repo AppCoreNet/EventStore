@@ -12,7 +12,7 @@ namespace AppCoreNet.EventStore.SqlServer;
 
 [Collection(SqlServerTestCollection.Name)]
 [Trait("Category", "Integration")]
-public class SqlServerEventStoreTests : EventStoreTests, IAsyncLifetime
+public class SqlServerEventStoreTests : EventStoreTests
 {
     private readonly SqlServerTestFixture _sqlServerTestFixture;
 
@@ -39,16 +39,18 @@ public class SqlServerEventStoreTests : EventStoreTests, IAsyncLifetime
             });
     }
 
-    public async Task InitializeAsync()
+    protected override async Task InitializeAsync()
     {
         await using ServiceProvider sp = CreateServiceProvider();
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
         var provider = scope.ServiceProvider.GetRequiredService<DbContextDataProvider<TestDbContext>>();
         await provider.DbContext.Database.MigrateAsync();
+
+        await base.InitializeAsync();
     }
 
-    public Task DisposeAsync()
+    protected override async Task DisposeAsync()
     {
-        return Task.CompletedTask;
+        await base.DisposeAsync();
     }
 }

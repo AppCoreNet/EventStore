@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,12 +44,8 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
         CancellationToken cancellationToken = default)
     {
         Ensure.Arg.NotNull(streamId);
+        Ensure.Arg.NotWildcard(streamId);
         Ensure.Arg.NotNull(events);
-
-        if (streamId.IsWildcard)
-        {
-            throw new InvalidOperationException("Events cannot be written to a stream ID which has a wildcard.");
-        }
 
         var procedure = new WriteEventsSqlStoredProcedure(_dbContext, _options.SchemaName, _serializer)
         {
@@ -128,7 +127,10 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
     {
         Ensure.Arg.NotNull(streamId);
 
-        // TODO: watch wildcard streams
+        // TODO: watch prefix/suffix streams
+        if (streamId.IsPrefix || streamId.IsSuffix)
+            throw new NotImplementedException();
+
         var procedure = new WatchEventsStoredProcedure(_dbContext, _options.SchemaName)
         {
             StreamId = streamId,
@@ -156,7 +158,12 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
             StreamId = streamId,
         };
 
-        await command.ExecuteAsync(cancellationToken)
-                     .ConfigureAwait(false);
+        int affectedRows = await command.ExecuteAsync(cancellationToken)
+                                        .ConfigureAwait(false);
+
+        if (!streamId.IsWildcard && affectedRows == 0)
+        {
+            throw new EventStreamNotFoundException(streamId.Value);
+        }
     }
 }

@@ -8,7 +8,7 @@ internal sealed class DeleteSubscriptionCommand : SqlTextCommand
 {
     private readonly string _schema;
 
-    required public string SubscriptionId { get; init; }
+    required public SubscriptionId SubscriptionId { get; init; }
 
     public DeleteSubscriptionCommand(DbContext dbContext, string? schema)
         : base(dbContext)
@@ -18,24 +18,26 @@ internal sealed class DeleteSubscriptionCommand : SqlTextCommand
 
     protected override string GetCommandText()
     {
-        if (SubscriptionId != "$all")
-        {
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)} WHERE SubscriptionId=@SubscriptionId";
-        }
+        if (SubscriptionId == SubscriptionId.All)
+            return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)}";
 
-        return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)}";
+        if (SubscriptionId.IsPrefix)
+            return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)} WHERE SubscriptionId LIKE @SubscriptionId + '%'";
+
+        if (SubscriptionId.IsSuffix)
+            return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)} WHERE SubscriptionId LIKE '%' + @SubscriptionId";
+
+        return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)} WHERE SubscriptionId=@SubscriptionId";
     }
 
     protected override SqlParameter[] GetCommandParameters()
     {
-        if (SubscriptionId != "$all")
-        {
-            return
-            [
-                new SqlParameter("@SubscriptionId", SubscriptionId)
-            ];
-        }
+        if (SubscriptionId == SubscriptionId.All)
+            return Array.Empty<SqlParameter>();
 
-        return Array.Empty<SqlParameter>();
+        return
+        [
+            new SqlParameter("@SubscriptionId", SubscriptionId.Value.Trim('*'))
+        ];
     }
 }

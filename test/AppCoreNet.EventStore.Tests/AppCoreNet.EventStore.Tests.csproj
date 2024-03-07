@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Unix'">$(TargetFrameworks);net462</TargetFrameworks>
+    <RootNamespace>AppCoreNet.EventStore</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AppCoreNet.EventStore\AppCoreNet.EventStore.csproj" />
+  </ItemGroup>
+
+</Project>
