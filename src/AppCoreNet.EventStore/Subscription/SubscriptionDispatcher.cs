@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,49 +49,53 @@ public class SubscriptionDispatcher : BackgroundService
         CancellationToken cancellationToken)
     {
         WatchSubscriptionResult? watchResult = null;
-        ITransaction? transaction = null;
-
-        if (subscriptionStore is ITransactionalStore transactionalSubscriptionStore)
-        {
-            transaction = await transactionalSubscriptionStore.BeginTransactionAsync(cancellationToken);
-        }
 
         do
         {
-            watchResult = await subscriptionStore.WatchAsync(TimeSpan.FromMinutes(1), cancellationToken)
-                                                 .ConfigureAwait(false);
+            ITransaction? transaction = null;
 
-            if (watchResult != null)
+            if (subscriptionStore is ITransactionalStore transactionalSubscriptionStore)
             {
-                IReadOnlyCollection<IEventEnvelope> events =
-                    await store.ReadAsync(
-                                   watchResult.StreamId,
-                                   watchResult.Position,
-                                   maxCount: 1024,
-                                   cancellationToken: cancellationToken)
-                               .ConfigureAwait(false);
+                transaction = await transactionalSubscriptionStore.BeginTransactionAsync(cancellationToken);
+            }
 
-                long lastPosition = watchResult.Position;
-                foreach (IEventEnvelope @event in events)
+            await using (transaction)
+            {
+                watchResult = await subscriptionStore.WatchAsync(TimeSpan.FromMinutes(1), cancellationToken)
+                                                     .ConfigureAwait(false);
+
+                if (watchResult != null)
                 {
-                    try
-                    {
-                        // TODO: invoke event handler
-                        lastPosition = watchResult.Position;
-                    }
-                    catch
-                    {
-                        break;
-                    }
-                }
+                    IReadOnlyCollection<EventEnvelope> events =
+                        await store.ReadAsync(
+                                       watchResult.StreamId,
+                                       watchResult.Position,
+                                       maxCount: 1024,
+                                       cancellationToken: cancellationToken)
+                                   .ConfigureAwait(false);
 
-                await subscriptionStore.UpdateAsync(watchResult.SubscriptionId, lastPosition, cancellationToken)
-                                       .ConfigureAwait(false);
+                    long lastPosition = watchResult.Position;
+                    foreach (EventEnvelope @event in events)
+                    {
+                        try
+                        {
+                            // TODO: invoke event handler
+                            lastPosition = watchResult.Position;
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
 
-                if (transaction != null)
-                {
-                    await transaction.CommitAsync(cancellationToken)
-                                     .ConfigureAwait(false);
+                    await subscriptionStore.UpdateAsync(watchResult.SubscriptionId, lastPosition, cancellationToken)
+                                           .ConfigureAwait(false);
+
+                    if (transaction != null)
+                    {
+                        await transaction.CommitAsync(cancellationToken)
+                                         .ConfigureAwait(false);
+                    }
                 }
             }
         }

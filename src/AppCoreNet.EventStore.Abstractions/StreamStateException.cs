@@ -1,4 +1,7 @@
-﻿using AppCoreNet.Diagnostics;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using AppCoreNet.Diagnostics;
 
 namespace AppCoreNet.EventStore;
 

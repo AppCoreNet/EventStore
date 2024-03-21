@@ -11,6 +11,8 @@ namespace AppCoreNet.EventStore;
 /// </summary>
 public sealed class EventMetadata
 {
+    // TODO: EventId ?
+
     /// <summary>
     /// Gets the stream position of the event.
     /// </summary>

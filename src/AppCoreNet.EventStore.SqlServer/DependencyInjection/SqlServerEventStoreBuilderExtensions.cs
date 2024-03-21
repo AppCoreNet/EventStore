@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Diagnostics;
@@ -78,7 +81,7 @@ public static class SqlServerEventStoreBuilderExtensions
         return builder.AddSqlServer<TDbContext>(dataProviderName, (_, o) => configureOptions(o), lifetime);
     }
 
-    public static DbContextDataProviderBuilder<TDbContext> AddEventStore<TDbContext>(
+    public static DbContextDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
         this DbContextDataProviderBuilder<TDbContext> builder,
         Action<IServiceProvider, SqlServerEventStoreOptions>? configureOptions = null)
         where TDbContext : DbContext
@@ -89,12 +92,12 @@ public static class SqlServerEventStoreBuilderExtensions
         return builder;
     }
 
-    public static DbContextDataProviderBuilder<TDbContext> AddEventStore<TDbContext>(
+    public static DbContextDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
         this DbContextDataProviderBuilder<TDbContext> builder,
         Action<SqlServerEventStoreOptions> configureOptions)
         where TDbContext : DbContext
     {
         Ensure.Arg.NotNull(configureOptions);
-        return builder.AddEventStore((_, o) => configureOptions(o));
+        return builder.AddSqlServerEventStore((_, o) => configureOptions(o));
     }
 }

@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -185,7 +188,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
             streamId,
             StreamPosition.Start,
             StreamReadDirection.Forward,
@@ -222,7 +225,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
             streamId,
             StreamPosition.End,
             StreamReadDirection.Forward,
@@ -259,7 +262,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
             streamId,
             StreamPosition.End,
             StreamReadDirection.Backward,
@@ -296,7 +299,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
             streamId,
             StreamPosition.Start,
             StreamReadDirection.Backward,
@@ -333,7 +336,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
             streamId,
             StreamPosition.FromValue(1),
             StreamReadDirection.Forward,
@@ -370,7 +373,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         await eventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<IEventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
             streamId,
             StreamPosition.FromValue(1),
             StreamReadDirection.Backward,

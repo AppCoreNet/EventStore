@@ -8,12 +8,15 @@ using System.Threading.Tasks;
 using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Diagnostics;
 using AppCoreNet.EventStore.Serialization;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace AppCoreNet.EventStore.SqlServer;
 
+/// <summary>
+/// Provides a <see cref="IEventStore"/> implementation using SQL Server.
+/// </summary>
+/// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
 public sealed class SqlServerEventStore<TDbContext> : IEventStore
     where TDbContext : DbContext
 {
@@ -22,6 +25,12 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
     private readonly TDbContext _dbContext;
     private readonly SqlServerEventStoreOptions _options;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqlServerEventStore{TDbContext}"/> class.
+    /// </summary>
+    /// <param name="dataProvider">The data provider used to access the event store.</param>
+    /// <param name="serializer">The serializer used to serialize/deserialize events.</param>
+    /// <param name="optionsMonitor">The <see cref="IOptionsMonitor{TOptions}"/> used to resolve the <see cref="SqlServerEventStoreOptions"/>.</param>
     public SqlServerEventStore(
         DbContextDataProvider<TDbContext> dataProvider,
         IEventStoreSerializer serializer,
@@ -76,7 +85,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<IEventEnvelope>> ReadAsync(
+    public async Task<IReadOnlyCollection<EventEnvelope>> ReadAsync(
         StreamId streamId,
         StreamPosition position,
         StreamReadDirection direction = StreamReadDirection.Forward,
@@ -97,7 +106,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
         IReadOnlyCollection<Model.Event> events = await query.ExecuteAsync(cancellationToken)
                                                              .ConfigureAwait(false);
 
-        var result = new List<IEventEnvelope>(maxCount);
+        var result = new List<EventEnvelope>(maxCount);
         foreach (Model.Event e in events)
         {
             result.Add(

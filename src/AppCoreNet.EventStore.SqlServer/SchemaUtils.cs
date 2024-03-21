@@ -1,4 +1,7 @@
-﻿namespace AppCoreNet.EventStore.SqlServer;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+namespace AppCoreNet.EventStore.SqlServer;
 
 internal static class SchemaUtils
 {

@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System.Threading.Tasks;
 using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Extensions.DependencyInjection;
@@ -35,7 +38,7 @@ public class SqlServerEventStoreTests : EventStoreTests
                      {
                          o.UseSqlServer(_sqlServerTestFixture.ConnectionString);
                      })
-                 .AddEventStore(o => o.SchemaName = "events");
+                 .AddSqlServerEventStore(o => o.SchemaName = "events");
             });
     }
 

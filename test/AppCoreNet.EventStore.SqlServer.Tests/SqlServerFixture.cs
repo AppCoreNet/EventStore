@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System.Threading.Tasks;
 using Testcontainers.MsSql;
 using Xunit;
 

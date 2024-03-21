@@ -1,4 +1,7 @@
-﻿using AppCoreNet.EventStore.SqlServer.Subscription;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using AppCoreNet.EventStore.SqlServer.Subscription;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AppCoreNet.EventStore.SqlServer.Migrations;

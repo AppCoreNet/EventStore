@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AppCoreNet.Data.EntityFrameworkCore;
@@ -9,6 +12,10 @@ using Microsoft.Extensions.Options;
 
 namespace AppCoreNet.EventStore.SqlServer.Subscription;
 
+/// <summary>
+/// Provides a <see cref="ISubscriptionStore"/> implementation using SQL Server.
+/// </summary>
+/// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
 public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore, ITransactionalStore
     where TDbContext : DbContext
 {
@@ -16,6 +23,11 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
     private readonly TDbContext _dbContext;
     private readonly SqlServerEventStoreOptions _options;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqlServerSubscriptionStore{TDbContext}"/> class.
+    /// </summary>
+    /// <param name="dataProvider">The data provider used to access the subscription store.</param>
+    /// <param name="optionsMonitor">The <see cref="IOptionsMonitor{TOptions}"/> used to resolve the <see cref="SqlServerEventStoreOptions"/>.</param>
     public SqlServerSubscriptionStore(
         DbContextDataProvider<TDbContext> dataProvider,
         IOptionsMonitor<SqlServerEventStoreOptions> optionsMonitor)

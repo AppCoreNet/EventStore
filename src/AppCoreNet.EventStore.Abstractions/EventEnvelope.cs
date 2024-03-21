@@ -11,7 +11,7 @@ namespace AppCoreNet.EventStore;
 /// <summary>
 /// Represents an event with type name and metadata.
 /// </summary>
-public sealed class EventEnvelope : IEventEnvelope
+public sealed class EventEnvelope
 {
     /// <summary>
     /// Gets the type name of the event.
@@ -28,16 +28,34 @@ public sealed class EventEnvelope : IEventEnvelope
     /// </summary>
     public EventMetadata Metadata { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EventEnvelope"/> class.
+    /// </summary>
+    /// <remarks>
+    /// The event type name can be specified by the <see cref="EventTypeAttribute"/>.
+    /// </remarks>
+    /// <param name="data">The event data.</param>
     public EventEnvelope(object data)
         : this(GetEventTypeName(data), data)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EventEnvelope"/> class.
+    /// </summary>
+    /// <param name="eventTypeName">The event type name.</param>
+    /// <param name="data">The event data.</param>
     public EventEnvelope(string eventTypeName, object data)
         : this(eventTypeName, data, new EventMetadata())
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EventEnvelope"/> class.
+    /// </summary>
+    /// <param name="eventTypeName">The event type name.</param>
+    /// <param name="data">The event data.</param>
+    /// <param name="metadata">The event metadata.</param>
     public EventEnvelope(string eventTypeName, object data, EventMetadata metadata)
     {
         Ensure.Arg.NotEmpty(eventTypeName);

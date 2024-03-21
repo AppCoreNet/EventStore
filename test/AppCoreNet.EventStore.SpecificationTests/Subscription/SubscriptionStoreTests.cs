@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -165,7 +168,7 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
         watch.Should()
              .NotBeNull();
 
-        IReadOnlyCollection<IEventEnvelope> events = await eventStore.ReadAsync(watch!.StreamId, watch.Position);
+        IReadOnlyCollection<EventEnvelope> events = await eventStore.ReadAsync(watch!.StreamId, watch.Position);
         await subscriptionStore.UpdateAsync(subscriptionId, events.Last().Metadata.GlobalPosition);
 
         if (transaction != null)

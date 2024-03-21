@@ -41,7 +41,7 @@ public interface IEventStore
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
     /// <exception cref="StreamNotFoundException">The stream was not found.</exception>
-    Task<IReadOnlyCollection<IEventEnvelope>> ReadAsync(
+    Task<IReadOnlyCollection<EventEnvelope>> ReadAsync(
         StreamId streamId,
         StreamPosition position,
         StreamReadDirection direction = StreamReadDirection.Forward,

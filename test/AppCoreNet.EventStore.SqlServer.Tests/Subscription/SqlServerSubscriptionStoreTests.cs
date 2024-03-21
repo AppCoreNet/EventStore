@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
 using System.Threading.Tasks;
 using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
@@ -37,7 +39,7 @@ public class SqlServerSubscriptionStoreTests : SubscriptionStoreTests
                      {
                          o.UseSqlServer(_sqlServerTestFixture.ConnectionString);
                      })
-                 .AddEventStore(o => o.SchemaName = "events");
+                 .AddSqlServerEventStore(o => o.SchemaName = "events");
             });
     }
 

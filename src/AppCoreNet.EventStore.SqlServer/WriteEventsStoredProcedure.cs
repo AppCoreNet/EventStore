@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -118,10 +121,10 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
         dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.Data), typeof(string)));
         dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.Metadata), typeof(string)));
 
-        IEnumerable<(IEventEnvelope, int index)> eventEnvelopes = Events.Select(
-            (e, index) => (e as IEventEnvelope ?? new EventEnvelope(e), index));
+        IEnumerable<(EventEnvelope, int index)> eventEnvelopes = Events.Select(
+            (e, index) => (e as EventEnvelope ?? new EventEnvelope(e), index));
 
-        foreach ((IEventEnvelope @event, int index) in eventEnvelopes)
+        foreach ((EventEnvelope @event, int index) in eventEnvelopes)
         {
             dataTable.Rows.Add(
             [

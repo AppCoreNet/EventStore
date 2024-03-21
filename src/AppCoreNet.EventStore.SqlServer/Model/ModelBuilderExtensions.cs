@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// Licensed under the MIT license.
+// Copyright (c) The AppCore .NET project.
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AppCoreNet.EventStore.SqlServer.Model;
