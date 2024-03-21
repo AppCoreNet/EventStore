@@ -2,7 +2,7 @@
 using FluentAssertions;
 using Xunit;
 
-namespace AppCoreNet.EventStore;
+namespace AppCoreNet.EventStore.Subscription;
 
 public class SubscriptionIdTests
 {

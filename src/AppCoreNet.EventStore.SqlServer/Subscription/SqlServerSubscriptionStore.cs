@@ -1,23 +1,22 @@
 ﻿using System;
-using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
-using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Diagnostics;
+using AppCoreNet.EventStore.Subscription;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace AppCoreNet.EventStore.SqlServer;
+namespace AppCoreNet.EventStore.SqlServer.Subscription;
 
-public sealed class SqlServerSubscriptionManager<TDbContext> : ISubscriptionManager
+public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore, ITransactionalStore
     where TDbContext : DbContext
 {
     private readonly DbContextDataProvider<TDbContext> _dataProvider;
     private readonly TDbContext _dbContext;
     private readonly SqlServerEventStoreOptions _options;
 
-    public SqlServerSubscriptionManager(
+    public SqlServerSubscriptionStore(
         DbContextDataProvider<TDbContext> dataProvider,
         IOptionsMonitor<SqlServerEventStoreOptions> optionsMonitor)
     {
@@ -73,13 +72,11 @@ public sealed class SqlServerSubscriptionManager<TDbContext> : ISubscriptionMana
         TimeSpan timeout,
         CancellationToken cancellationToken = default)
     {
-        ITransaction? transaction = null;
+        AppCoreNet.Data.ITransaction? transaction = null;
 
         if (_dataProvider.TransactionManager.CurrentTransaction == null)
         {
-            transaction = await _dataProvider.TransactionManager.BeginTransactionAsync(
-                                                 IsolationLevel.Unspecified,
-                                                 cancellationToken)
+            transaction = await _dataProvider.TransactionManager.BeginTransactionAsync(cancellationToken)
                                              .ConfigureAwait(false);
         }
 
@@ -122,7 +119,18 @@ public sealed class SqlServerSubscriptionManager<TDbContext> : ISubscriptionMana
 
         if (affectedRows == 0)
         {
-            throw new EventSubscriptionNotFoundException(subscriptionId.Value);
+            throw new SubscriptionNotFoundException(subscriptionId.Value);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        AppCoreNet.Data.ITransaction transaction =
+            await _dataProvider
+                  .TransactionManager.BeginTransactionAsync(cancellationToken)
+                  .ConfigureAwait(false);
+
+        return new StoreTransaction(transaction);
     }
 }

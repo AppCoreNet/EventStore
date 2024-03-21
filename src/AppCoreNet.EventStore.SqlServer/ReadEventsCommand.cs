@@ -83,52 +83,45 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
                 throw new ArgumentOutOfRangeException(nameof(Direction), Direction, null);
         }
 
-        try
+        IQueryable<Model.EventStream> dbSet =
+            DbContext.Set<Model.EventStream>()
+                     .AsNoTracking();
+
+        if (StreamId.IsWildcard)
         {
-            IQueryable<Model.EventStream> dbSet =
-                DbContext.Set<Model.EventStream>()
-                         .AsNoTracking();
-
-            if (StreamId.IsWildcard)
+            if (StreamId.IsPrefix)
             {
-                if (StreamId.IsPrefix)
-                {
-                    string streamIdPrefix = StreamId.Value.TrimEnd('*');
-                    dbSet = dbSet.Where(s => s.StreamId.StartsWith(streamIdPrefix));
-                }
-                else if (StreamId.IsSuffix)
-                {
-                    string streamIdSuffix = StreamId.Value.TrimStart('*');
-                    dbSet = dbSet.Where(s => s.StreamId.EndsWith(streamIdSuffix));
-                }
+                string streamIdPrefix = StreamId.Value.TrimEnd('*');
+                dbSet = dbSet.Where(s => s.StreamId.StartsWith(streamIdPrefix));
             }
-            else
+            else if (StreamId.IsSuffix)
             {
-                dbSet = dbSet.Where(s => s.StreamId == StreamId.Value);
+                string streamIdSuffix = StreamId.Value.TrimStart('*');
+                dbSet = dbSet.Where(s => s.StreamId.EndsWith(streamIdSuffix));
             }
-
-            var streamEvents =
-                await dbSet.Select(
-                               s =>
-                                   new
-                                   {
-                                       Events = events.Where(e => e.EventStreamId == s.Id)
-                                                      .Take(maxCount) // do not move Take() before Where()
-                                                      .ToList(),
-                                   })
-                           .FirstOrDefaultAsync(cancellationToken)
-                           .ConfigureAwait(false);
-
-            if (streamEvents == null)
-            {
-                throw new EventStreamNotFoundException(StreamId.Value);
-            }
-
-            return streamEvents.Events;
         }
-        catch (SqlException error)
+        else
         {
-            throw new EventStoreException($"An error occured accessing the event store: {error.Message}", error);
+            dbSet = dbSet.Where(s => s.StreamId == StreamId.Value);
         }
+
+        var streamEvents =
+            await dbSet.Select(
+                           s =>
+                               new
+                               {
+                                   Events = events.Where(e => e.EventStreamId == s.Id)
+                                                  .Take(maxCount) // do not move Take() before Where()
+                                                  .ToList(),
+                               })
+                       .FirstOrDefaultAsync(cancellationToken)
+                       .ConfigureAwait(false);
+
+        if (streamEvents == null)
+        {
+            throw new StreamNotFoundException(StreamId.Value);
+        }
+
+        return streamEvents.Events;
     }
 }

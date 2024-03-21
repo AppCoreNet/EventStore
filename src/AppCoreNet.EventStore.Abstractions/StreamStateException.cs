@@ -5,7 +5,7 @@ namespace AppCoreNet.EventStore;
 /// <summary>
 /// Exception which is thrown when an event stream was not in the expected state.
 /// </summary>
-public class EventStreamStateException : EventStoreException
+public class StreamStateException : EventStoreException
 {
     /// <summary>
     /// Gets the ID of the stream.
@@ -18,11 +18,11 @@ public class EventStreamStateException : EventStoreException
     public StreamState ExpectedState { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EventStreamStateException"/> class.
+    /// Initializes a new instance of the <see cref="StreamStateException"/> class.
     /// </summary>
     /// <param name="streamId">The ID of the event stream.</param>
     /// <param name="expectedState">The state of the stream which was expected.</param>
-    public EventStreamStateException(string streamId, StreamState expectedState)
+    public StreamStateException(string streamId, StreamState expectedState)
         : base($"Event stream '{streamId}' was not in the expected state '{expectedState}'.")
     {
         Ensure.Arg.NotEmpty(streamId);

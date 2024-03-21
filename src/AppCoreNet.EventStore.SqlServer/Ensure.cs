@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using AppCoreNet.EventStore;
+using AppCoreNet.EventStore.Subscription;
 
 // ReSharper disable once CheckNamespace
 namespace AppCoreNet.Diagnostics;

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
+using AppCoreNet.EventStore.Subscription;
 using AppCoreNet.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,15 +10,15 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using NSubstitute;
 using Xunit;
 
-namespace AppCoreNet.EventStore.SqlServer;
+namespace AppCoreNet.EventStore.SqlServer.Subscription;
 
 [Collection(SqlServerTestCollection.Name)]
 [Trait("Category", "Integration")]
-public class SqlServerSubscriptionManagerTests : SubscriptionManagerTests
+public class SqlServerSubscriptionStoreTests : SubscriptionStoreTests
 {
     private readonly SqlServerTestFixture _sqlServerTestFixture;
 
-    public SqlServerSubscriptionManagerTests(SqlServerTestFixture sqlServerTestFixture)
+    public SqlServerSubscriptionStoreTests(SqlServerTestFixture sqlServerTestFixture)
     {
         _sqlServerTestFixture = sqlServerTestFixture;
     }
@@ -53,16 +54,5 @@ public class SqlServerSubscriptionManagerTests : SubscriptionManagerTests
     protected override async Task DisposeAsync()
     {
         await base.DisposeAsync();
-    }
-
-    protected override async Task<IDisposable> BeginTransaction(IServiceProvider serviceProvider)
-    {
-        var provider = serviceProvider.GetRequiredService<DbContextDataProvider<TestDbContext>>();
-        return await provider.TransactionManager.BeginTransactionAsync();
-    }
-
-    protected override async Task CommitTransaction(IDisposable transaction)
-    {
-        await ((ITransaction)transaction).CommitAsync();
     }
 }

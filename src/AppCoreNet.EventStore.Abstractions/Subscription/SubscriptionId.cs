@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using AppCoreNet.Diagnostics;
 
-namespace AppCoreNet.EventStore;
+namespace AppCoreNet.EventStore.Subscription;
 
 /// <summary>
 /// Represents a subscription ID.

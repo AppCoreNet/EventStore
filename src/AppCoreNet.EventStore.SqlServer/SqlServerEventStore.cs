@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Diagnostics;
 using AppCoreNet.EventStore.Serialization;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -67,7 +68,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
             case 0:
                 break;
             case -1:
-                throw new EventStreamStateException(streamId.Value, state);
+                throw new StreamStateException(streamId.Value, state);
             default:
                 throw new NotImplementedException(
                     $"Unknown status code '{result.StatusCode}' returned from stored procedure");
@@ -93,9 +94,8 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
             MaxCount = maxCount,
         };
 
-        IReadOnlyCollection<Model.Event> events =
-            await query.ExecuteAsync(cancellationToken)
-                       .ConfigureAwait(false);
+        IReadOnlyCollection<Model.Event> events = await query.ExecuteAsync(cancellationToken)
+                                                             .ConfigureAwait(false);
 
         var result = new List<IEventEnvelope>(maxCount);
         foreach (Model.Event e in events)
@@ -163,7 +163,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
 
         if (!streamId.IsWildcard && affectedRows == 0)
         {
-            throw new EventStreamNotFoundException(streamId.Value);
+            throw new StreamNotFoundException(streamId.Value);
         }
     }
 }

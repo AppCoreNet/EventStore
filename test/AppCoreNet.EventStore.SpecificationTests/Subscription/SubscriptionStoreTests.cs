@@ -7,9 +7,9 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace AppCoreNet.EventStore;
+namespace AppCoreNet.EventStore.Subscription;
 
-public abstract class SubscriptionManagerTests : IAsyncLifetime
+public abstract class SubscriptionStoreTests : IAsyncLifetime
 {
     protected ServiceProvider CreateServiceProvider()
     {
@@ -44,8 +44,8 @@ public abstract class SubscriptionManagerTests : IAsyncLifetime
         await using ServiceProvider sp = CreateServiceProvider();
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
-        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
-        await manager.DeleteAsync(SubscriptionId.All);
+        var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+        await subscriptionStore.DeleteAsync(SubscriptionId.All);
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
         await eventStore.DeleteAsync(StreamId.All);
@@ -72,8 +72,8 @@ public abstract class SubscriptionManagerTests : IAsyncLifetime
         await using ServiceProvider sp = CreateServiceProvider();
         await using AsyncServiceScope scope = sp.CreateAsyncScope();
 
-        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
-        await manager.CreateAsync(Guid.NewGuid().ToString("N"), StreamId.All);
+        var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+        await subscriptionStore.CreateAsync(Guid.NewGuid().ToString("N"), StreamId.All);
     }
 
     [Fact]
@@ -87,10 +87,10 @@ public abstract class SubscriptionManagerTests : IAsyncLifetime
 
         await CreateEvents(scope.ServiceProvider, streamId);
 
-        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
-        await manager.CreateAsync(subscriptionId, streamId);
+        var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+        await subscriptionStore.CreateAsync(subscriptionId, streamId);
 
-        WatchSubscriptionResult? result = await manager.WatchAsync(TimeSpan.FromSeconds(5));
+        WatchSubscriptionResult? result = await subscriptionStore.WatchAsync(TimeSpan.FromSeconds(5));
 
         result.Should()
               .NotBeNull();
@@ -117,18 +117,24 @@ public abstract class SubscriptionManagerTests : IAsyncLifetime
 
         await CreateEvents(scope1.ServiceProvider, streamId);
 
-        var manager1 = scope1.ServiceProvider.GetRequiredService<ISubscriptionManager>();
-        await manager1.CreateAsync(subscriptionId, StreamId.All);
+        var subscriptionStore1 = scope1.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+        await subscriptionStore1.CreateAsync(subscriptionId, StreamId.All);
 
-        using IDisposable transaction1 = await BeginTransaction(scope1.ServiceProvider);
-        WatchSubscriptionResult? watch1 = await manager1.WatchAsync(TimeSpan.FromSeconds(0));
+        using IDisposable? transaction1 = subscriptionStore1 is ITransactionalStore transactionalStore1
+            ? await transactionalStore1.BeginTransactionAsync()
+            : null;
+
+        WatchSubscriptionResult? watch1 = await subscriptionStore1.WatchAsync(TimeSpan.FromSeconds(0));
 
         watch1.Should()
               .NotBeNull();
 
-        var manager2 = scope2.ServiceProvider.GetRequiredService<ISubscriptionManager>();
-        using IDisposable transaction2 = await BeginTransaction(scope2.ServiceProvider);
-        WatchSubscriptionResult? watch2 = await manager2.WatchAsync(TimeSpan.FromSeconds(0));
+        var subscriptionStore2 = scope2.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+        using IDisposable? transaction2 = subscriptionStore2 is ITransactionalStore transactionalStore2
+            ? await transactionalStore2.BeginTransactionAsync()
+            : null;
+
+        WatchSubscriptionResult? watch2 = await subscriptionStore2.WatchAsync(TimeSpan.FromSeconds(0));
 
         watch2.Should()
               .BeNull();
@@ -147,28 +153,31 @@ public abstract class SubscriptionManagerTests : IAsyncLifetime
 
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
-        var manager = scope.ServiceProvider.GetRequiredService<ISubscriptionManager>();
-        await manager.CreateAsync(subscriptionId, streamId);
+        var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+        await subscriptionStore.CreateAsync(subscriptionId, streamId);
 
-        using IDisposable transaction = await BeginTransaction(scope.ServiceProvider);
-        WatchSubscriptionResult? watch = await manager.WatchAsync(TimeSpan.FromSeconds(0));
+        await using ITransaction? transaction = subscriptionStore is ITransactionalStore transactionalStore1
+            ? await transactionalStore1.BeginTransactionAsync()
+            : null;
+
+        WatchSubscriptionResult? watch = await subscriptionStore.WatchAsync(TimeSpan.FromSeconds(0));
 
         watch.Should()
              .NotBeNull();
 
         IReadOnlyCollection<IEventEnvelope> events = await eventStore.ReadAsync(watch!.StreamId, watch.Position);
-        await manager.UpdateAsync(subscriptionId, events.Last().Metadata.GlobalPosition);
+        await subscriptionStore.UpdateAsync(subscriptionId, events.Last().Metadata.GlobalPosition);
 
-        await CommitTransaction(transaction);
+        if (transaction != null)
+            await transaction.CommitAsync();
 
-        using IDisposable transaction2 = await BeginTransaction(scope.ServiceProvider);
-        watch = await manager.WatchAsync(TimeSpan.FromSeconds(0));
+        await using ITransaction? transaction2 = subscriptionStore is ITransactionalStore transactionalStore2
+            ? await transactionalStore2.BeginTransactionAsync()
+            : null;
+
+        watch = await subscriptionStore.WatchAsync(TimeSpan.FromSeconds(0));
 
         watch.Should()
              .BeNull();
     }
-
-    protected abstract Task<IDisposable> BeginTransaction(IServiceProvider serviceProvider);
-
-    protected abstract Task CommitTransaction(IDisposable transaction);
 }

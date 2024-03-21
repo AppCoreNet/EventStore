@@ -132,7 +132,7 @@ public abstract class EventStoreTests : IAsyncLifetime
             new EventEnvelope("TestCreated", "name"),
         };
 
-        await Assert.ThrowsAsync<EventStreamStateException>(
+        await Assert.ThrowsAsync<StreamStateException>(
             async () => await eventStore.WriteAsync(streamId, events, StreamState.Position(0)));
     }
 
@@ -162,7 +162,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         StreamState state = CreateStreamState(stateValue);
 
-        await Assert.ThrowsAsync<EventStreamStateException>(
+        await Assert.ThrowsAsync<StreamStateException>(
             async () => await eventStore.WriteAsync(streamId, events, state));
     }
 
@@ -406,7 +406,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        await Assert.ThrowsAsync<EventStreamNotFoundException>(
+        await Assert.ThrowsAsync<StreamNotFoundException>(
             async () => await eventStore.ReadAsync(streamId, streamPosition, direction));
     }
 

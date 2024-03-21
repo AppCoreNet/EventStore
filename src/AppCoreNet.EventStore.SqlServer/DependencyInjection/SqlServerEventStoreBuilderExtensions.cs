@@ -4,6 +4,8 @@ using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Diagnostics;
 using AppCoreNet.EventStore;
 using AppCoreNet.EventStore.SqlServer;
+using AppCoreNet.EventStore.SqlServer.Subscription;
+using AppCoreNet.EventStore.Subscription;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -27,23 +29,23 @@ public static class SqlServerEventStoreBuilderExtensions
             return ActivatorUtilities.CreateInstance<SqlServerEventStore<TDbContext>>(sp, dataProvider);
         };
 
-        Func<IServiceProvider, SqlServerSubscriptionManager<TDbContext>> subscriptionManagerFactory = sp =>
+        Func<IServiceProvider, SqlServerSubscriptionStore<TDbContext>> subscriptionManagerFactory = sp =>
         {
             var dataProviderResolver = sp.GetRequiredService<IDataProviderResolver>();
             var dataProvider = (DbContextDataProvider<TDbContext>)dataProviderResolver.Resolve(dataProviderName);
-            return ActivatorUtilities.CreateInstance<SqlServerSubscriptionManager<TDbContext>>(sp, dataProvider);
+            return ActivatorUtilities.CreateInstance<SqlServerSubscriptionStore<TDbContext>>(sp, dataProvider);
         };
 
         services.TryAdd(
         [
             ServiceDescriptor.Describe(typeof(SqlServerEventStore<TDbContext>), eventStoreFactory, lifetime),
-            ServiceDescriptor.Describe(typeof(SqlServerSubscriptionManager<TDbContext>), subscriptionManagerFactory, lifetime),
+            ServiceDescriptor.Describe(typeof(SqlServerSubscriptionStore<TDbContext>), subscriptionManagerFactory, lifetime),
         ]);
 
         services.TryAddEnumerable(
         [
             ServiceDescriptor.Transient<IEventStore, SqlServerEventStore<TDbContext>>(),
-            ServiceDescriptor.Transient<ISubscriptionManager, SqlServerSubscriptionManager<TDbContext>>(),
+            ServiceDescriptor.Transient<ISubscriptionStore, SqlServerSubscriptionStore<TDbContext>>(),
         ]);
 
         if (configureOptions != null)

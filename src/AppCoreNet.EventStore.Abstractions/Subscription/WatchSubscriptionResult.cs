@@ -1,10 +1,10 @@
 using System;
 using AppCoreNet.Diagnostics;
 
-namespace AppCoreNet.EventStore;
+namespace AppCoreNet.EventStore.Subscription;
 
 /// <summary>
-/// Represents the result of <see cref="ISubscriptionManager.WatchAsync"/>.
+/// Represents the result of <see cref="ISubscriptionStore.WatchAsync"/>.
 /// </summary>
 public sealed class WatchSubscriptionResult
 {

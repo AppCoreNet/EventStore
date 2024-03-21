@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using AppCoreNet.EventStore.SqlServer.Subscription;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AppCoreNet.EventStore.SqlServer.Migrations;
 

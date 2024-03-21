@@ -21,7 +21,7 @@ public interface IEventStore
     /// <param name="state">The expected state of the stream.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    /// <exception cref="EventStreamStateException">The version of the stream was not the expected one.</exception>
+    /// <exception cref="StreamStateException">The version of the stream was not the expected one.</exception>
     Task WriteAsync(
         StreamId streamId,
         IEnumerable<object> events,
@@ -40,7 +40,7 @@ public interface IEventStore
     /// <param name="maxCount">The maximum number of events to read.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
-    /// <exception cref="EventStreamNotFoundException">The stream was not found.</exception>
+    /// <exception cref="StreamNotFoundException">The stream was not found.</exception>
     Task<IReadOnlyCollection<IEventEnvelope>> ReadAsync(
         StreamId streamId,
         StreamPosition position,

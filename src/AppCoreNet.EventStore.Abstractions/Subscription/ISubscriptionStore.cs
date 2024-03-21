@@ -5,9 +5,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AppCoreNet.EventStore;
+namespace AppCoreNet.EventStore.Subscription;
 
-public interface ISubscriptionManager
+/// <summary>
+/// Represents the event subscription store.
+/// </summary>
+public interface ISubscriptionStore
 {
     Task CreateAsync(
         SubscriptionId subscriptionId,

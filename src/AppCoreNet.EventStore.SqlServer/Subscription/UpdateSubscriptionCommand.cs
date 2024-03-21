@@ -1,7 +1,8 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using AppCoreNet.EventStore.Subscription;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppCoreNet.EventStore.SqlServer;
+namespace AppCoreNet.EventStore.SqlServer.Subscription;
 
 internal sealed class UpdateSubscriptionCommand : SqlTextCommand
 {

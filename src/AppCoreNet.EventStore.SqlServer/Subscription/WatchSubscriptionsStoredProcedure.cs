@@ -2,7 +2,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppCoreNet.EventStore.SqlServer;
+namespace AppCoreNet.EventStore.SqlServer.Subscription;
 
 internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Model.WatchSubscriptionsResult>
 {

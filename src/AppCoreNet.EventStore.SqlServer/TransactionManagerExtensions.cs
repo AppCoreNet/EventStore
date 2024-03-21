@@ -12,7 +12,7 @@ internal static class TransactionManagerExtensions
         Func<CancellationToken, Task<T>> queryAction,
         CancellationToken cancellationToken)
     {
-        ITransaction? transaction = null;
+        AppCoreNet.Data.ITransaction? transaction = null;
 
         if (transactionManager.CurrentTransaction == null)
         {

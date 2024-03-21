@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,9 @@ internal abstract class SqlCommand<T>
         }
         catch (SqlException error)
         {
+            if (error.Number == 3980 && cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException(null, error);
+
             throw new EventStoreException($"An error occured accessing the event store: {error.Message}", error);
         }
     }
