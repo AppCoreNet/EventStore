@@ -2,6 +2,8 @@
 // Copyright (c) The AppCore .NET project.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +24,20 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
     public WatchEventsStoredProcedure(DbContext dbContext, string? schema)
         : base(dbContext, $"[{SchemaUtils.GetEventStoreSchema(schema)}].{ProcedureName}")
     {
+    }
+
+    protected override async Task<Model.WatchEventsResult> ExecuteCoreAsync(CancellationToken cancellationToken)
+    {
+        int? timeout = DbContext.Database.GetCommandTimeout();
+        DbContext.Database.SetCommandTimeout(int.MaxValue);
+        try
+        {
+            return await base.ExecuteCoreAsync(cancellationToken);
+        }
+        finally
+        {
+            DbContext.Database.SetCommandTimeout(timeout);
+        }
     }
 
     public static string GetCreateScript(string? schema)

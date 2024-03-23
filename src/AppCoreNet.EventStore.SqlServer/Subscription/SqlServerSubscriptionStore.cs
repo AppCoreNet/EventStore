@@ -44,6 +44,7 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
     public async Task CreateAsync(
         SubscriptionId subscriptionId,
         StreamId streamId,
+        bool failIfExists = true,
         CancellationToken cancellationToken = default)
     {
         Ensure.Arg.NotNull(subscriptionId);
@@ -54,6 +55,7 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
         {
             SubscriptionId = subscriptionId,
             StreamId = streamId,
+            FailIfExists = failIfExists,
         };
 
         await command.ExecuteAsync(cancellationToken)

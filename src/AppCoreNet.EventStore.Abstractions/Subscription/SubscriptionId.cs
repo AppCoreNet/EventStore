@@ -83,6 +83,15 @@ public sealed class SubscriptionId : IEquatable<SubscriptionId>
     }
 
     /// <summary>
+    /// Creates a new unique subscription ID.
+    /// </summary>
+    /// <returns>The new subscription ID.</returns>
+    public static SubscriptionId NewId()
+    {
+        return new SubscriptionId(Guid.NewGuid().ToString("N"));
+    }
+
+    /// <summary>
     /// Returns the string representation of this instance.
     /// </summary>
     /// <returns>The ID represented as a string.</returns>

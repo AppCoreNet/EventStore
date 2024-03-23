@@ -2,6 +2,8 @@
 // Copyright (c) The AppCore .NET project.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +20,20 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
     public WatchSubscriptionsStoredProcedure(DbContext dbContext, string? schema)
         : base(dbContext, $"[{SchemaUtils.GetEventStoreSchema(schema)}].{ProcedureName}")
     {
+    }
+
+    protected override async Task<Model.WatchSubscriptionsResult> ExecuteCoreAsync(CancellationToken cancellationToken)
+    {
+        int? timeout = DbContext.Database.GetCommandTimeout();
+        DbContext.Database.SetCommandTimeout(int.MaxValue);
+        try
+        {
+            return await base.ExecuteCoreAsync(cancellationToken);
+        }
+        finally
+        {
+            DbContext.Database.SetCommandTimeout(timeout);
+        }
     }
 
     public static string GetCreateScript(string? schema)
@@ -41,10 +57,10 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
                     BEGIN
                         SELECT TOP 1 @Id = SU.Id, @SubscriptionId = SU.SubscriptionId, @Position = SU.Position, @StreamId = SU.StreamId
                             FROM [events].EventSubscription AS SU WITH (UPDLOCK, ROWLOCK, READPAST), [events].EventStream AS ST
-                            WHERE (ST.StreamId = SU.StreamId AND SU.Position <= ST.Position)
-                                OR (SU.StreamId = '{Constants.StreamIdAll}' AND SU.Position <= ST.[Sequence])
-                                OR (LEFT(SU.StreamId, 1) = '*' AND ST.StreamId LIKE '%' + RIGHT(SU.StreamId, LEN(SU.StreamId)-1) AND SU.Position <= ST.[Sequence])
-                                OR (RIGHT(SU.StreamId, 1) = '*' AND ST.StreamId LIKE LEFT(SU.StreamId, LEN(SU.StreamId)-1) + '%' AND SU.Position <= ST.[Sequence])
+                            WHERE (ST.StreamId = SU.StreamId AND SU.Position < ST.Position)
+                                OR (SU.StreamId = '{Constants.StreamIdAll}' AND SU.Position < ST.[Sequence])
+                                OR (LEFT(SU.StreamId, 1) = '*' AND ST.StreamId LIKE '%' + RIGHT(SU.StreamId, LEN(SU.StreamId)-1) AND SU.Position < ST.[Sequence])
+                                OR (RIGHT(SU.StreamId, 1) = '*' AND ST.StreamId LIKE LEFT(SU.StreamId, LEN(SU.StreamId)-1) + '%' AND SU.Position < ST.[Sequence])
                             ORDER BY SU.ProcessedAt, ST.[Sequence] DESC;
 
                         IF @Id IS NULL

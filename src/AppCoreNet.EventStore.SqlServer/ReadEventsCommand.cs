@@ -25,7 +25,8 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
     {
     }
 
-    protected override async Task<IReadOnlyCollection<Model.Event>> ExecuteCoreAsync(CancellationToken cancellationToken)
+    protected override async Task<IReadOnlyCollection<Model.Event>> ExecuteCoreAsync(
+        CancellationToken cancellationToken)
     {
         IQueryable<Model.Event> events =
             DbContext.Set<Model.Event>()
@@ -41,16 +42,16 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
             {
                 if (Position == StreamPosition.Start)
                 {
-                    events = events.OrderBy(e => e.Position);
+                    events = events.OrderBy(e => e.Sequence);
                 }
                 else if (Position == StreamPosition.End)
                 {
-                    events = events.OrderByDescending(e => e.Position);
+                    events = events.OrderByDescending(e => e.Sequence);
                     maxCount = 1;
                 }
                 else
                 {
-                    events = events.OrderBy(e => e.Position);
+                    events = events.OrderBy(e => e.Sequence);
                     events = isWildCardStreamId
                         ? events.Where(e => e.Sequence >= Position.Value)
                         : events.Where(e => e.Position >= Position.Value);
@@ -63,16 +64,16 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
             {
                 if (Position == StreamPosition.Start)
                 {
-                    events = events.OrderBy(e => e.Position);
+                    events = events.OrderBy(e => e.Sequence);
                     maxCount = 1;
                 }
                 else if (Position == StreamPosition.End)
                 {
-                    events = events.OrderByDescending(e => e.Position);
+                    events = events.OrderByDescending(e => e.Sequence);
                 }
                 else
                 {
-                    events = events.OrderByDescending(e => e.Position);
+                    events = events.OrderByDescending(e => e.Sequence);
                     events = isWildCardStreamId
                         ? events.Where(e => e.Sequence <= Position.Value)
                         : events.Where(e => e.Position <= Position.Value);
@@ -107,6 +108,20 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
             dbSet = dbSet.Where(s => s.StreamId == StreamId.Value);
         }
 
+        if (StreamId.IsWildcard)
+        {
+            List<Model.Event> result = await events.Join(
+                                                       dbSet,
+                                                       e => e.EventStreamId,
+                                                       s => s.Id,
+                                                       (e, _) => e)
+                                                   .Take(maxCount)
+                                                   .ToListAsync(cancellationToken)
+                                                   .ConfigureAwait(false);
+
+            return result;
+        }
+
         var streamEvents =
             await dbSet.Select(
                            s =>
@@ -116,14 +131,15 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
                                                   .Take(maxCount) // do not move Take() before Where()
                                                   .ToList(),
                                })
-                       .FirstOrDefaultAsync(cancellationToken)
+                       .ToListAsync(cancellationToken)
                        .ConfigureAwait(false);
 
-        if (streamEvents == null)
+        if (streamEvents.Count == 0)
         {
             throw new StreamNotFoundException(StreamId.Value);
         }
 
-        return streamEvents.Events;
+        return streamEvents.First()
+                           .Events;
     }
 }

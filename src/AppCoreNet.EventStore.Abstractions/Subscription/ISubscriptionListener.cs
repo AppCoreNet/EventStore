@@ -4,18 +4,22 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AppCoreNet.EventStore;
+namespace AppCoreNet.EventStore.Subscription;
 
 /// <summary>
-/// Represents a listener for events.
+/// Represents a listener for subscriptions.
 /// </summary>
-public interface IEventListener
+public interface ISubscriptionListener
 {
     /// <summary>
     /// Invoked to handle an event.
     /// </summary>
+    /// <param name="subscriptionId">The subscription ID.</param>
     /// <param name="event">The event to handle.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task HandleAsync(EventEnvelope @event, CancellationToken cancellationToken = default);
+    Task HandleAsync(
+        SubscriptionId subscriptionId,
+        EventEnvelope @event,
+        CancellationToken cancellationToken = default);
 }

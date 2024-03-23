@@ -75,7 +75,8 @@ public static class ModelBuilderExtensions
                           .IsRequired()
                           .HasMaxLength(Constants.StreamIdMaxLength);
 
-        subscriptionEntity.HasIndex(e => e.SubscriptionId);
+        subscriptionEntity.HasIndex(e => e.SubscriptionId)
+                          .IsUnique();
 
         subscriptionEntity.HasIndex(e => e.Position);
 

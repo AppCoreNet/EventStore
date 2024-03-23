@@ -17,11 +17,13 @@ public interface ISubscriptionStore
     /// </summary>
     /// <param name="subscriptionId">The ID of the subscription.</param>
     /// <param name="streamId">The ID (can be wildcard) of the stream to subscribe to.</param>
+    /// <param name="failIfExists">Whether to throw <see cref="EventStoreException"/> if the subscription does already exist.</param>
     /// <param name="cancellationToken">An optional cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task CreateAsync(
         SubscriptionId subscriptionId,
         StreamId streamId,
+        bool failIfExists = true,
         CancellationToken cancellationToken = default);
 
     /// <summary>

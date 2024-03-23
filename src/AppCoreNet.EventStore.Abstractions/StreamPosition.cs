@@ -42,7 +42,7 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
     /// <returns>The stream position.</returns>
     public static StreamPosition FromValue(long value)
     {
-        Ensure.Arg.InRange(value, 0, long.MaxValue);
+        Ensure.Arg.InRange(value, -2, long.MaxValue);
         return new StreamPosition(value);
     }
 

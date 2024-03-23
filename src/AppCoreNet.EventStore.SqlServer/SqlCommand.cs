@@ -27,7 +27,8 @@ internal abstract class SqlCommand<T>
         }
         catch (SqlException error)
         {
-            if (error.Number == 3980 && cancellationToken.IsCancellationRequested)
+            // see https://github.com/dotnet/SqlClient/issues/26
+            if (cancellationToken.IsCancellationRequested && error.Number == 0 && error.State == 0 && error.Class == 11)
                 throw new OperationCanceledException(null, error);
 
             throw new EventStoreException($"An error occured accessing the event store: {error.Message}", error);

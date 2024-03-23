@@ -15,6 +15,8 @@ internal sealed class CreateSubscriptionCommand : SqlTextCommand
 
     required public StreamId StreamId { get; init; }
 
+    public bool FailIfExists { get; init; }
+
     public CreateSubscriptionCommand(DbContext dbContext, string? schema)
         : base(dbContext)
     {
@@ -23,7 +25,11 @@ internal sealed class CreateSubscriptionCommand : SqlTextCommand
 
     protected override string GetCommandText()
     {
-        return $"INSERT INTO [{_schema}].{nameof(Model.EventSubscription)} (SubscriptionId, StreamId, CreatedAt, Position) VALUES (@SubscriptionId, @StreamId, SYSUTCDATETIME(), 0)";
+        string tableName = $"[{_schema}].{nameof(Model.EventSubscription)}";
+
+        return FailIfExists
+            ? $"INSERT INTO {tableName} (SubscriptionId, StreamId, CreatedAt, Position) VALUES (@SubscriptionId, @StreamId, SYSUTCDATETIME(), {StreamPosition.Start.Value})"
+            : $"INSERT INTO {tableName} (SubscriptionId, StreamId, CreatedAt, Position) SELECT @SubscriptionId, @StreamId, SYSUTCDATETIME(), {StreamPosition.Start.Value} WHERE NOT EXISTS (SELECT 1 FROM {tableName} WHERE SubscriptionId=@SubscriptionId)";
     }
 
     protected override SqlParameter[] GetCommandParameters()

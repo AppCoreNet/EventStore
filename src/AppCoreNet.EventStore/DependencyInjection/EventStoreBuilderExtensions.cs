@@ -4,6 +4,7 @@
 using System;
 using AppCoreNet.Diagnostics;
 using AppCoreNet.EventStore.Serialization;
+using AppCoreNet.EventStore.Subscription;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -28,6 +29,30 @@ public static class EventStoreBuilderExtensions
         Ensure.Arg.NotNull(builder);
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IEventStoreSerializer, JsonEventStoreSerializer>());
+
+        if (configureOptions != null)
+        {
+            builder.Services.Configure(configureOptions);
+        }
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures event store subscriptions.
+    /// </summary>
+    /// <param name="builder">The <see cref="IEventStoreBuilder"/>.</param>
+    /// <param name="configureOptions">An optional delegate to configure the <see cref="SubscriptionOptions"/>.</param>
+    /// <returns>The passed <see cref="IEventStoreBuilder"/> to allow chaining.</returns>
+    public static IEventStoreBuilder AddSubscriptions(
+        this IEventStoreBuilder builder,
+        Action<SubscriptionOptions>? configureOptions = null)
+    {
+        Ensure.Arg.NotNull(builder);
+
+        builder.Services.AddHostedService<SubscriptionService>();
+        builder.Services.TryAddSingleton<SubscriptionManager>();
+        builder.Services.TryAddTransient<ISubscriptionManager>(sp => sp.GetRequiredService<SubscriptionManager>());
 
         if (configureOptions != null)
         {
