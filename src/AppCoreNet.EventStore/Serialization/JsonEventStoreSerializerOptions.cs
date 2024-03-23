@@ -3,7 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using AppCoreNet.Diagnostics;
 
 namespace AppCoreNet.EventStore.Serialization;
 
@@ -24,4 +27,36 @@ public class JsonEventStoreSerializerOptions
     {
         { "StringDictionary", typeof(Dictionary<string, string>) },
     };
+
+    /// <summary>
+    /// Adds a type name mapping for the specified <paramref name="type"/>.
+    /// </summary>
+    /// <param name="type">The type for which to add the mapping.</param>
+    /// <returns>The <see cref="JsonEventStoreSerializerOptions"/> to allow chaining.</returns>
+    public JsonEventStoreSerializerOptions AddTypeMap(Type type)
+    {
+        TypeNameMap[GetEventTypeName(type)] = type;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a type name mapping for the specified <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type for which to add the mapping.</typeparam>
+    /// <returns>The <see cref="JsonEventStoreSerializerOptions"/> to allow chaining.</returns>
+    public JsonEventStoreSerializerOptions AddTypeMap<T>()
+    {
+        return AddTypeMap(typeof(T));
+    }
+
+    private static string GetEventTypeName(Type dataType)
+    {
+        Ensure.Arg.NotNull(dataType);
+
+        EventTypeAttribute? eventTypeAttribute =
+            dataType.GetCustomAttributes<EventTypeAttribute>()
+                    .FirstOrDefault();
+
+        return eventTypeAttribute?.EventTypeName ?? dataType.FullName!;
+    }
 }

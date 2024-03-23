@@ -27,7 +27,8 @@ public sealed class SubscriptionOptions
     /// <param name="subscriptionId">The subscription ID.</param>
     /// <param name="streamId">The stream ID.</param>
     /// <param name="listenerFactory">The factory used to create the <see cref="ISubscriptionListener"/>.</param>
-    public void Subscribe(
+    /// <returns>The <see cref="SubscriptionOptions"/> instance to allow chaining.</returns>
+    public SubscriptionOptions Subscribe(
         SubscriptionId subscriptionId,
         StreamId streamId,
         Func<IServiceProvider, ISubscriptionListener> listenerFactory)
@@ -49,6 +50,7 @@ public sealed class SubscriptionOptions
         }
 
         _subscriptions.Add(subscriptionId, new Subscription(streamId, listenerFactory));
+        return this;
     }
 
     /// <summary>
@@ -57,11 +59,15 @@ public sealed class SubscriptionOptions
     /// <param name="subscriptionId">The subscription ID.</param>
     /// <param name="streamId">The stream ID.</param>
     /// <param name="listener">The <see cref="ISubscriptionListener"/>.</param>
-    public void Subscribe(SubscriptionId subscriptionId, StreamId streamId, ISubscriptionListener listener)
+    /// <returns>The <see cref="SubscriptionOptions"/> instance to allow chaining.</returns>
+    public SubscriptionOptions Subscribe(
+        SubscriptionId subscriptionId,
+        StreamId streamId,
+        ISubscriptionListener listener)
     {
         Ensure.Arg.NotNull(listener);
 
-        Subscribe(
+        return Subscribe(
             subscriptionId,
             streamId,
             _ => listener);
@@ -73,10 +79,11 @@ public sealed class SubscriptionOptions
     /// <param name="subscriptionId">The subscription ID.</param>
     /// <param name="streamId">The stream ID.</param>
     /// <typeparam name="T">The type of the <see cref="ISubscriptionListener"/>.</typeparam>
-    public void Subscribe<T>(SubscriptionId subscriptionId, StreamId streamId)
+    /// <returns>The <see cref="SubscriptionOptions"/> instance to allow chaining.</returns>
+    public SubscriptionOptions Subscribe<T>(SubscriptionId subscriptionId, StreamId streamId)
         where T : ISubscriptionListener
     {
-        Subscribe(
+        return Subscribe(
             subscriptionId,
             streamId,
             sp => ActivatorUtilities.GetServiceOrCreateInstance<T>(sp));
