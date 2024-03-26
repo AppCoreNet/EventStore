@@ -35,7 +35,7 @@ public class JsonEventStoreSerializerOptions
     /// <returns>The <see cref="JsonEventStoreSerializerOptions"/> to allow chaining.</returns>
     public JsonEventStoreSerializerOptions AddTypeMap(Type type)
     {
-        TypeNameMap[GetEventTypeName(type)] = type;
+        TypeNameMap.Add(GetEventTypeName(type), type);
         return this;
     }
 
@@ -49,14 +49,33 @@ public class JsonEventStoreSerializerOptions
         return AddTypeMap(typeof(T));
     }
 
+    /// <summary>
+    /// Adds type name mappings for all types in the specified <paramref name="assembly"/>.
+    /// </summary>
+    /// <remarks>
+    /// Adds mappings for all types which are decorated with <see cref="EventTypeAttribute"/>.
+    /// </remarks>
+    /// <param name="assembly">The assembly to search.</param>
+    /// <returns>The <see cref="JsonEventStoreSerializerOptions"/> to allow chaining.</returns>
+    public JsonEventStoreSerializerOptions AddTypeMapsFrom(Assembly assembly)
+    {
+        foreach (Type type in assembly.GetTypes())
+        {
+            var eventTypeAttribute = type.GetCustomAttribute<EventTypeAttribute>();
+            if (eventTypeAttribute != null)
+            {
+                TypeNameMap.Add(eventTypeAttribute.EventTypeName, type);
+            }
+        }
+
+        return this;
+    }
+
     private static string GetEventTypeName(Type dataType)
     {
         Ensure.Arg.NotNull(dataType);
 
-        EventTypeAttribute? eventTypeAttribute =
-            dataType.GetCustomAttributes<EventTypeAttribute>()
-                    .FirstOrDefault();
-
+        var eventTypeAttribute = dataType.GetCustomAttribute<EventTypeAttribute>();
         return eventTypeAttribute?.EventTypeName ?? dataType.FullName!;
     }
 }

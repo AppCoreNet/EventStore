@@ -14,9 +14,9 @@ public sealed class WatchEventResult
     /// Gets the position of the last observed event in the watched stream.
     /// </summary>
     /// <remarks>
-    /// The position refers to the <see cref="EventMetadata.StreamPosition"/> when watch was invoked
+    /// The position refers to the <see cref="EventMetadata.Index"/> when watch was invoked
     /// for a specific stream. If watch was invoked for a wildcard stream it refers to the
-    /// <see cref="EventMetadata.GlobalPosition"/>.
+    /// <see cref="EventMetadata.Sequence"/>.
     /// </remarks>
     public long Position { get; }
 

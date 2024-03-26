@@ -22,15 +22,24 @@ internal sealed class DeleteStreamCommand : SqlTextCommand
     protected override string GetCommandText()
     {
         if (StreamId == StreamId.All)
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)}";
+        {
+            return $"DELETE FROM [{_schema}].[{nameof(Model.EventStream)}]";
+        }
 
         if (StreamId.IsPrefix)
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)} WHERE StreamId LIKE @StreamId + '%'";
+        {
+            return $"DELETE FROM [{_schema}].[{nameof(Model.EventStream)}]"
+                   + $" WHERE [{nameof(Model.EventStream.StreamId)}] LIKE @{nameof(StreamId)} + '%'";
+        }
 
         if (StreamId.IsSuffix)
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)} WHERE StreamId LIKE '%' + @StreamId";
+        {
+            return $"DELETE FROM [{_schema}].[{nameof(Model.EventStream)}]"
+                   + $" WHERE [{nameof(Model.EventStream.StreamId)}] LIKE '%' + @{nameof(StreamId)}";
+        }
 
-        return $"DELETE FROM [{_schema}].{nameof(Model.EventStream)} WHERE StreamId=@StreamId";
+        return $"DELETE FROM [{_schema}].[{nameof(Model.EventStream)}]"
+               + $" WHERE [{nameof(Model.EventStream.StreamId)}] = @{nameof(StreamId)}";
     }
 
     protected override SqlParameter[] GetCommandParameters()
@@ -40,7 +49,7 @@ internal sealed class DeleteStreamCommand : SqlTextCommand
 
         return
         [
-            new SqlParameter("@StreamId", StreamId.Value.Trim('*'))
+            new SqlParameter($"@{nameof(StreamId)}", StreamId.Value.Trim('*'))
         ];
     }
 }

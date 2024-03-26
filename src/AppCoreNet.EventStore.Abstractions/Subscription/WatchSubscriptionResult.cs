@@ -1,7 +1,6 @@
 // Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
-using System;
 using AppCoreNet.Diagnostics;
 
 namespace AppCoreNet.EventStore.Subscription;
@@ -25,9 +24,9 @@ public sealed class WatchSubscriptionResult
     /// Gets the position of the last event that was processed by the subscription.
     /// </summary>
     /// <remarks>
-    /// The position refers to the <see cref="EventMetadata.StreamPosition"/> when the subscription was created
+    /// The position refers to the <see cref="EventMetadata.Index"/> when the subscription was created
     /// for a specific stream. If the subscription was created for a wildcard stream it refers to the
-    /// <see cref="EventMetadata.GlobalPosition"/>.
+    /// <see cref="EventMetadata.Sequence"/>.
     /// </remarks>
     public StreamPosition Position { get; }
 
@@ -40,10 +39,8 @@ public sealed class WatchSubscriptionResult
     public WatchSubscriptionResult(SubscriptionId subscriptionId, StreamId streamId, StreamPosition position)
     {
         Ensure.Arg.NotNull(subscriptionId);
+        Ensure.Arg.NotWildcard(subscriptionId);
         Ensure.Arg.NotNull(streamId);
-
-        if (subscriptionId.IsWildcard)
-            throw new ArgumentException("Subscription ID must not contain wildcard characters.", nameof(subscriptionId));
 
         SubscriptionId = subscriptionId;
         StreamId = streamId;

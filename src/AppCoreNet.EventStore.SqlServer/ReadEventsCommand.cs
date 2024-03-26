@@ -54,7 +54,7 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
                     events = events.OrderBy(e => e.Sequence);
                     events = isWildCardStreamId
                         ? events.Where(e => e.Sequence >= Position.Value)
-                        : events.Where(e => e.Position >= Position.Value);
+                        : events.Where(e => e.Index >= Position.Value);
                 }
 
                 break;
@@ -76,7 +76,7 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
                     events = events.OrderByDescending(e => e.Sequence);
                     events = isWildCardStreamId
                         ? events.Where(e => e.Sequence <= Position.Value)
-                        : events.Where(e => e.Position <= Position.Value);
+                        : events.Where(e => e.Index <= Position.Value);
                 }
 
                 break;
@@ -110,14 +110,15 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
 
         if (StreamId.IsWildcard)
         {
-            List<Model.Event> result = await events.Join(
-                                                       dbSet,
-                                                       e => e.EventStreamId,
-                                                       s => s.Id,
-                                                       (e, _) => e)
-                                                   .Take(maxCount)
-                                                   .ToListAsync(cancellationToken)
-                                                   .ConfigureAwait(false);
+            List<Model.Event> result =
+                await events.Join(
+                                dbSet,
+                                e => e.EventStreamId,
+                                s => s.Id,
+                                (e, _) => e)
+                            .Take(maxCount)
+                            .ToListAsync(cancellationToken)
+                            .ConfigureAwait(false);
 
             return result;
         }

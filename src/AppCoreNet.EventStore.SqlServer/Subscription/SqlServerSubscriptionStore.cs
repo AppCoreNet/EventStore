@@ -2,6 +2,8 @@
 // Copyright (c) The AppCore .NET project.
 
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using AppCoreNet.Data.EntityFrameworkCore;
@@ -38,6 +40,26 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
         _dataProvider = dataProvider;
         _dbContext = _dataProvider.DbContext;
         _options = optionsMonitor.CurrentValue;
+    }
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<EventStore.Subscription.Subscription> GetAllAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        IAsyncEnumerable<Model.EventSubscription> enumerable =
+            _dbContext.Set<Model.EventSubscription>()
+                      .AsNoTracking()
+                      .AsAsyncEnumerable();
+
+        await foreach (Model.EventSubscription subscription in enumerable.WithCancellation(cancellationToken)
+                                                                         .ConfigureAwait(false))
+        {
+            yield return new EventStore.Subscription.Subscription(
+                subscription.SubscriptionId,
+                subscription.StreamId,
+                subscription.Position,
+                subscription.ProcessedAt);
+        }
     }
 
     /// <inheritdoc />

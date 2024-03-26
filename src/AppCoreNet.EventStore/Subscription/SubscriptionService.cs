@@ -81,7 +81,8 @@ public sealed class SubscriptionService : BackgroundService
             ITransaction? transaction = null;
             if (subscriptionStore is ITransactionalStore transactionalSubscriptionStore)
             {
-                transaction = await transactionalSubscriptionStore.BeginTransactionAsync(cancellationToken);
+                transaction = await transactionalSubscriptionStore.BeginTransactionAsync(cancellationToken)
+                                                                  .ConfigureAwait(false);
             }
 
             await using (transaction)
@@ -112,8 +113,8 @@ public sealed class SubscriptionService : BackgroundService
                                           .ConfigureAwait(false);
 
                             lastPosition = watchResult.StreamId.IsWildcard
-                                ? @event.Metadata.GlobalPosition
-                                : @event.Metadata.StreamPosition;
+                                ? @event.Metadata.Sequence
+                                : @event.Metadata.Index;
                         }
                         catch
                         {

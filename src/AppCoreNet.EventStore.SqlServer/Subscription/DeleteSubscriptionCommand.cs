@@ -22,16 +22,21 @@ internal sealed class DeleteSubscriptionCommand : SqlTextCommand
 
     protected override string GetCommandText()
     {
+        string tableName = $"[{_schema}].[{nameof(Model.EventSubscription)}]";
+
         if (SubscriptionId == SubscriptionId.All)
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)}";
+        {
+            return $"DELETE FROM {tableName}";
+        }
 
         if (SubscriptionId.IsPrefix)
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)} WHERE SubscriptionId LIKE @SubscriptionId + '%'";
+        {
+            return $"DELETE FROM {tableName}"
+                   + $" WHERE [{nameof(Model.EventSubscription.SubscriptionId)}] LIKE @{nameof(SubscriptionId)}";
+        }
 
-        if (SubscriptionId.IsSuffix)
-            return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)} WHERE SubscriptionId LIKE '%' + @SubscriptionId";
-
-        return $"DELETE FROM [{_schema}].{nameof(Model.EventSubscription)} WHERE SubscriptionId=@SubscriptionId";
+        return $"DELETE FROM {tableName}"
+               + $" WHERE  [{nameof(Model.EventSubscription.SubscriptionId)}] = @{nameof(SubscriptionId)}";
     }
 
     protected override SqlParameter[] GetCommandParameters()
@@ -41,7 +46,7 @@ internal sealed class DeleteSubscriptionCommand : SqlTextCommand
 
         return
         [
-            new SqlParameter("@SubscriptionId", SubscriptionId.Value.Trim('*'))
+            new SqlParameter($"@{nameof(SubscriptionId)}", SubscriptionId.Value.Replace('*', '%'))
         ];
     }
 }

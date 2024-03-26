@@ -14,14 +14,14 @@ public sealed class EventMetadata
     // TODO: EventId ?
 
     /// <summary>
-    /// Gets the stream position of the event.
+    /// Gets the index of the event.
     /// </summary>
-    public long StreamPosition { get; init; }
+    public long Index { get; init; }
 
     /// <summary>
-    /// Gets the global position of the event.
+    /// Gets the global sequence of the event.
     /// </summary>
-    public long GlobalPosition { get; init; }
+    public long Sequence { get; init; }
 
     /// <summary>
     /// Gets the creation time of the event.

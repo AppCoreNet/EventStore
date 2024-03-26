@@ -42,8 +42,8 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
 
         return $"""
                 CREATE PROCEDURE [{schema}].{ProcedureName} (
-                    @PollInterval INT,
-                    @Timeout INT
+                    @{nameof(PollInterval)} INT,
+                    @{nameof(Timeout)} INT
                     )
                 AS
                 BEGIN
@@ -55,23 +55,43 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
 
                     WHILE @Id IS NULL
                     BEGIN
-                        SELECT TOP 1 @Id = SU.Id, @SubscriptionId = SU.SubscriptionId, @Position = SU.Position, @StreamId = SU.StreamId
-                            FROM [events].EventSubscription AS SU WITH (UPDLOCK, ROWLOCK, READPAST), [events].EventStream AS ST
-                            WHERE (ST.StreamId = SU.StreamId AND SU.Position < ST.Position)
-                                OR (SU.StreamId = '{Constants.StreamIdAll}' AND SU.Position < ST.[Sequence])
-                                OR (LEFT(SU.StreamId, 1) = '*' AND ST.StreamId LIKE '%' + RIGHT(SU.StreamId, LEN(SU.StreamId)-1) AND SU.Position < ST.[Sequence])
-                                OR (RIGHT(SU.StreamId, 1) = '*' AND ST.StreamId LIKE LEFT(SU.StreamId, LEN(SU.StreamId)-1) + '%' AND SU.Position < ST.[Sequence])
-                            ORDER BY SU.ProcessedAt, ST.[Sequence] DESC;
+                        SELECT TOP 1
+                            @Id = SU.[{nameof(Model.EventSubscription.Id)}],
+                            @SubscriptionId = SU.[{nameof(Model.EventSubscription.SubscriptionId)}],
+                            @Position = SU.[{nameof(Model.EventSubscription.Position)}],
+                            @StreamId = SU.[{nameof(Model.EventSubscription.StreamId)}]
+                        FROM
+                            [{schema}].[{nameof(Model.EventSubscription)}] AS SU WITH (UPDLOCK, ROWLOCK, READPAST),
+                            [{schema}].[{nameof(Model.EventStream)}] AS ST
+                        WHERE
+                            (ST.[{nameof(Model.EventStream.StreamId)}] = SU.[{nameof(Model.EventSubscription.StreamId)}]
+                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Index)}])
+                            OR (SU.[{nameof(Model.EventSubscription.StreamId)}] = '{Constants.StreamIdAll}'
+                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
+                            OR (LEFT(SU.[{nameof(Model.EventSubscription.StreamId)}], 1) = '*'
+                                AND ST.[{nameof(Model.EventStream.StreamId)}] LIKE '%' + RIGHT(SU.[{nameof(Model.EventSubscription.StreamId)}], LEN(SU.[{nameof(Model.EventSubscription.StreamId)}])-1)
+                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
+                            OR (RIGHT(SU.[{nameof(Model.EventSubscription.StreamId)}], 1) = '*'
+                                AND ST.[{nameof(Model.EventStream.StreamId)}] LIKE LEFT(SU.[{nameof(Model.EventSubscription.StreamId)}], LEN(SU.[{nameof(Model.EventSubscription.StreamId)}])-1) + '%'
+                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
+                        ORDER BY
+                            SU.[{nameof(Model.EventSubscription.ProcessedAt)}],
+                            ST.[{nameof(Model.EventStream.Sequence)}]
+                            DESC;
 
                         IF @Id IS NULL
                         BEGIN
                             WAITFOR DELAY @WaitTime;
-                            SET @Timeout = @Timeout - @PollInterval;
-                            IF @Timeout <= 0 BREAK;
+                            SET @{nameof(Timeout)} = @{nameof(Timeout)} - @{nameof(PollInterval)};
+                            IF @{nameof(Timeout)} <= 0 BREAK;
                         END
                     END
 
-                    SELECT @Id AS Id, @SubscriptionId AS SubscriptionId, @Position AS Position, @StreamId AS StreamId;
+                    SELECT
+                        @Id AS [{nameof(Model.WatchSubscriptionsResult.Id)}],
+                        @SubscriptionId AS [{nameof(Model.WatchSubscriptionsResult.SubscriptionId)}],
+                        @Position AS [{nameof(Model.WatchSubscriptionsResult.Position)}],
+                        @StreamId AS [{nameof(Model.WatchSubscriptionsResult.StreamId)}];
                 END
                 """;
     }
@@ -85,8 +105,8 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
     {
         return
         [
-            new SqlParameter("@PollInterval", (int)PollInterval.TotalMilliseconds),
-            new SqlParameter("@Timeout", (int)Timeout.TotalMilliseconds),
+            new SqlParameter($"@{nameof(PollInterval)}", (int)PollInterval.TotalMilliseconds),
+            new SqlParameter($"@{nameof(Timeout)}", (int)Timeout.TotalMilliseconds),
         ];
     }
 }

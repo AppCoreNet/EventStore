@@ -14,11 +14,11 @@ namespace AppCoreNet.EventStore.Subscription;
 /// </summary>
 public sealed class SubscriptionOptions
 {
-    private readonly Dictionary<SubscriptionId, Subscription> _subscriptions = new ();
+    private readonly Dictionary<SubscriptionId, Subscriber> _subscribers = new ();
 
-    internal IEnumerable<(SubscriptionId SubscriptionId, Subscription Subscription)> GetSubscriptions()
+    internal IEnumerable<(SubscriptionId SubscriptionId, Subscriber Subscriber)> GetSubscribers()
     {
-        return _subscriptions.Select(s => (s.Key, s.Value));
+        return _subscribers.Select(s => (s.Key, s.Value));
     }
 
     /// <summary>
@@ -34,22 +34,16 @@ public sealed class SubscriptionOptions
         Func<IServiceProvider, ISubscriptionListener> listenerFactory)
     {
         Ensure.Arg.NotNull(subscriptionId);
+        Ensure.Arg.NotWildcard(subscriptionId);
         Ensure.Arg.NotNull(streamId);
         Ensure.Arg.NotNull(listenerFactory);
 
-        if (subscriptionId.IsWildcard)
-        {
-            throw new ArgumentException(
-                $"Cannot subscribe to wildcard subscription ID '{subscriptionId}'.",
-                nameof(subscriptionId));
-        }
-
-        if (_subscriptions.ContainsKey(subscriptionId))
+        if (_subscribers.ContainsKey(subscriptionId))
         {
             throw new InvalidOperationException($"Subscription with ID '{subscriptionId}' already exists.");
         }
 
-        _subscriptions.Add(subscriptionId, new Subscription(streamId, listenerFactory));
+        _subscribers.Add(subscriptionId, new Subscriber(streamId, listenerFactory));
         return this;
     }
 

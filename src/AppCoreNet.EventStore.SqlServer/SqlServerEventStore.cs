@@ -115,8 +115,8 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
                     _serializer.Deserialize(e.EventType, e.Data) !,
                     new EventMetadata
                     {
-                        StreamPosition = e.Position,
-                        GlobalPosition = e.Sequence,
+                        Index = e.Index,
+                        Sequence = e.Sequence,
                         CreatedAt = e.CreatedAt,
                         Data = (Dictionary<string, string>?)_serializer.Deserialize(
                             Constants.StringDictionaryTypeName,

@@ -17,7 +17,7 @@ internal sealed class Event
 
     public DateTimeOffset? CreatedAt { get; init; }
 
-    public long Position { get; init; }
+    public long Index { get; init; }
 
     required public string Data { get; init; }
 

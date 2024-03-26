@@ -43,7 +43,7 @@ public static class ModelBuilderExtensions
 
         eventEntity.HasIndex(e => e.EventStreamId);
 
-        eventEntity.HasIndex(e => new { e.EventStreamId, e.Position })
+        eventEntity.HasIndex(e => new { e.EventStreamId, e.Index })
                    .IsUnique();
 
         eventEntity.HasOne(e => e.EventStream)

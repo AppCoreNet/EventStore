@@ -14,7 +14,6 @@ namespace AppCoreNet.EventStore.SqlServer;
 internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.WriteEventsResult>
 {
     private const string ProcedureName = "WriteEvents";
-    private const string EventTableTypeName = "EventTable";
 
     private readonly string? _schema;
     private readonly IEventStoreSerializer _serializer;
@@ -38,70 +37,113 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
 
         yield return
             $"""
-             CREATE TYPE [{schema}].{EventTableTypeName} AS TABLE (
-                 EventType NVARCHAR({Constants.EventTypeMaxLength}),
-                 CreatedAt DATETIMEOFFSET,
-                 Offset INT,
-                 Data NVARCHAR(MAX),
-                 Metadata NVARCHAR(MAX)
+             CREATE TYPE [{schema}].[{nameof(Model.EventTableType)}] AS TABLE (
+                 [{nameof(Model.EventTableType.EventType)}] NVARCHAR({Constants.EventTypeMaxLength}),
+                 [{nameof(Model.EventTableType.CreatedAt)}] DATETIMEOFFSET,
+                 [{nameof(Model.EventTableType.Offset)}] INT,
+                 [{nameof(Model.EventTableType.Data)}] NVARCHAR(MAX),
+                 [{nameof(Model.EventTableType.Metadata)}] NVARCHAR(MAX)
              );
              """;
 
         yield return
             $"""
              CREATE PROCEDURE [{schema}].{ProcedureName} (
-                 @StreamId NVARCHAR({Constants.StreamIdMaxLength}),
-                 @ExpectedPosition BIGINT,
-                 @Events [{schema}].{EventTableTypeName} READONLY
+                 @{nameof(StreamId)} NVARCHAR({Constants.StreamIdMaxLength}),
+                 @{nameof(ExpectedPosition)} BIGINT,
+                 @{nameof(Events)} [{schema}].[{nameof(Model.EventTableType)}] READONLY
                  )
              AS
              BEGIN
                  DECLARE @StreamKey AS INT;
                  DECLARE @StreamSequence AS BIGINT;
-                 DECLARE @StreamPosition AS BIGINT;
+                 DECLARE @StreamIndex AS BIGINT;
 
-                 IF @StreamId is NULL RAISERROR('The value for parameter ''StreamId'' must not be NULL', 16, 1)
+                 IF @{nameof(StreamId)} is NULL RAISERROR('The value for parameter ''{nameof(StreamId)}'' must not be NULL', 16, 1)
 
-                 SELECT @StreamKey = Id, @StreamSequence = [Sequence], @StreamPosition = Position
-                     FROM [{schema}].EventStream WITH (UPDLOCK, ROWLOCK)
-                     WHERE StreamId = @StreamId;
+                 SELECT
+                    @StreamKey = Id,
+                    @StreamSequence = [{nameof(Model.EventStream.Sequence)}],
+                    @StreamIndex = [{nameof(Model.EventStream.Index)}]
+                 FROM
+                    [{schema}].[{nameof(Model.EventStream)}] WITH (UPDLOCK, ROWLOCK)
+                 WHERE
+                    [{nameof(Model.EventStream.StreamId)}] = @{nameof(StreamId)};
 
-                 IF @ExpectedPosition = -2
+                 IF @{nameof(ExpectedPosition)} = -2
                  BEGIN
-                     IF @StreamPosition IS NOT NULL
+                     IF @StreamIndex IS NOT NULL
                      BEGIN
-                         SELECT -1 AS StatusCode, @StreamSequence AS [Sequence], @StreamPosition AS Position;
+                         SELECT
+                            -1 AS [{nameof(Model.WriteEventsResult.StatusCode)}],
+                            @StreamSequence AS [{nameof(Model.WriteEventsResult.Sequence)}],
+                            @StreamIndex AS [{nameof(Model.WriteEventsResult.Index)}];
                          RETURN;
                      END
                  END
                  ELSE
                  BEGIN
-                     IF @ExpectedPosition != -1 AND ISNULL(@StreamPosition,-1) != @ExpectedPosition
+                     IF @{nameof(ExpectedPosition)} != -1 AND ISNULL(@StreamIndex,-1) != @{nameof(ExpectedPosition)}
                      BEGIN
-                         SELECT -1 AS StatusCode, @StreamSequence AS [Sequence], @StreamPosition AS Position;
+                         SELECT
+                            -1 AS [{nameof(Model.WriteEventsResult.StatusCode)}],
+                            @StreamSequence AS [{nameof(Model.WriteEventsResult.Sequence)}],
+                            @StreamIndex AS [{nameof(Model.WriteEventsResult.Index)}];
                          RETURN;
                      END
                  END
 
-                 IF @StreamPosition IS NULL
+                 IF @StreamIndex IS NULL
                  BEGIN
-                     INSERT INTO [{schema}].EventStream (StreamId, [Sequence], Position) VALUES (@StreamId, 0, 0);
+                     INSERT INTO
+                        [{schema}].[{nameof(Model.EventStream)}] (
+                            [{nameof(Model.EventStream.StreamId)}],
+                            [{nameof(Model.EventStream.Sequence)}],
+                            [{nameof(Model.EventStream.Index)}]
+                        )
+                        VALUES (
+                            @{nameof(StreamId)},
+                            0,
+                            0
+                        );
                      SET @StreamKey = SCOPE_IDENTITY();
-                     SET @StreamPosition = -1;
+                     SET @StreamIndex = -1;
                  END
 
-                 INSERT INTO [{schema}].Event (EventStreamId, EventType, CreatedAt, Position, Data, Metadata)
-                     SELECT @StreamKey, EventType, ISNULL(CreatedAt,SYSUTCDATETIME()), @StreamPosition + Offset + 1, Data, Metadata
-                         FROM @Events;
+                 INSERT INTO
+                    [{schema}].[{nameof(Model.Event)}] (
+                        [{nameof(Model.Event.EventStreamId)}],
+                        [{nameof(Model.Event.EventType)}],
+                        [{nameof(Model.Event.CreatedAt)}],
+                        [{nameof(Model.Event.Index)}],
+                        [{nameof(Model.Event.Data)}],
+                        [{nameof(Model.Event.Metadata)}]
+                    )
+                    SELECT
+                        @StreamKey,
+                        [{nameof(Model.EventTableType.EventType)}],
+                        ISNULL([{nameof(Model.EventTableType.CreatedAt)}],SYSUTCDATETIME()),
+                        @StreamIndex + [{nameof(Model.EventTableType.Offset)}] + 1,
+                        [{nameof(Model.EventTableType.Data)}],
+                        [{nameof(Model.EventTableType.Metadata)}]
+                    FROM
+                        @{nameof(Events)};
 
-                 SET @StreamPosition = @StreamPosition + @@ROWCOUNT;
+                 SET @StreamIndex = @StreamIndex + @@ROWCOUNT;
                  SET @StreamSequence = SCOPE_IDENTITY();
 
-                 UPDATE [{schema}].EventStream
-                     SET [Sequence] = @StreamSequence, Position = @StreamPosition
-                     WHERE Id = @StreamKey;
+                 UPDATE
+                    [{schema}].[{nameof(Model.EventStream)}]
+                 SET
+                    [{nameof(Model.EventStream.Sequence)}] = @StreamSequence,
+                    [{nameof(Model.EventStream.Index)}] = @StreamIndex
+                 WHERE
+                    Id = @StreamKey;
 
-                 SELECT 0 AS StatusCode, @StreamSequence AS [Sequence], @StreamPosition AS Position;
+                 SELECT
+                    0 AS [{nameof(Model.WriteEventsResult.StatusCode)}],
+                    @StreamSequence AS [{nameof(Model.WriteEventsResult.Sequence)}],
+                    @StreamIndex AS [{nameof(Model.WriteEventsResult.Index)}];
              END
              """;
     }
@@ -109,7 +151,7 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
     public static IEnumerable<string> GetDropScripts(string? schema)
     {
         yield return $"DROP PROCEDURE [{schema}].{ProcedureName}";
-        yield return $"DROP TYPE [{schema}].{EventTableTypeName}";
+        yield return $"DROP TYPE [{schema}].[{nameof(Model.EventTableType)}]";
     }
 
     private DataTable CreateEventDataTable()
@@ -143,11 +185,11 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
     {
         return
         [
-            new SqlParameter("@StreamId", StreamId.Value),
-            new SqlParameter("@ExpectedPosition", ExpectedPosition),
-            new SqlParameter("@Events", SqlDbType.Structured)
+            new SqlParameter($"@{nameof(StreamId)}", StreamId.Value),
+            new SqlParameter($"@{nameof(ExpectedPosition)}", ExpectedPosition),
+            new SqlParameter($"@{nameof(Events)}", SqlDbType.Structured)
             {
-                TypeName = $"[{_schema}].{EventTableTypeName}",
+                TypeName = $"[{_schema}].[{nameof(Model.EventTableType)}]",
                 Value = CreateEventDataTable(),
             },
         ];

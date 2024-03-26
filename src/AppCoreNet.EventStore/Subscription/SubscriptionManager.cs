@@ -18,7 +18,7 @@ public sealed class SubscriptionManager : ISubscriptionManager
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly SubscriptionOptions _options;
-    private readonly ConcurrentDictionary<SubscriptionId, Subscription> _subscriptions = new ();
+    private readonly ConcurrentDictionary<SubscriptionId, Subscriber> _subscriptions = new ();
 
     private sealed class NoOpListener : ISubscriptionListener
     {
@@ -58,11 +58,11 @@ public sealed class SubscriptionManager : ISubscriptionManager
         {
             var store = serviceProvider.GetRequiredService<ISubscriptionStore>();
 
-            foreach ((SubscriptionId subscriptionId, Subscription subscription) in _options.GetSubscriptions())
+            foreach ((SubscriptionId subscriptionId, Subscriber subscriber) in _options.GetSubscribers())
             {
-                _subscriptions.TryAdd(subscriptionId, subscription);
+                _subscriptions.TryAdd(subscriptionId, subscriber);
 
-                await store.CreateAsync(subscriptionId, subscription.StreamId, failIfExists: false, cancellationToken)
+                await store.CreateAsync(subscriptionId, subscriber.StreamId, failIfExists: false, cancellationToken)
                            .ConfigureAwait(false);
             }
         }
@@ -76,17 +76,11 @@ public sealed class SubscriptionManager : ISubscriptionManager
         CancellationToken cancellationToken = default)
     {
         Ensure.Arg.NotNull(subscriptionId);
+        Ensure.Arg.NotWildcard(subscriptionId);
         Ensure.Arg.NotNull(streamId);
         Ensure.Arg.NotNull(listenerFactory);
 
-        if (subscriptionId.IsWildcard)
-        {
-            throw new ArgumentException(
-                $"Cannot subscribe to wildcard subscription ID '{subscriptionId}'.",
-                nameof(subscriptionId));
-        }
-
-        if (!_subscriptions.TryAdd(subscriptionId, new Subscription(streamId, listenerFactory)))
+        if (!_subscriptions.TryAdd(subscriptionId, new Subscriber(streamId, listenerFactory)))
         {
             throw new InvalidOperationException($"Subscription with ID '{subscriptionId}' already exists.");
         }
@@ -114,13 +108,7 @@ public sealed class SubscriptionManager : ISubscriptionManager
     public async Task UnsubscribeAsync(SubscriptionId subscriptionId, CancellationToken cancellationToken = default)
     {
         Ensure.Arg.NotNull(subscriptionId);
-
-        if (subscriptionId.IsWildcard)
-        {
-            throw new ArgumentException(
-                $"Cannot unsubscribe from wildcard subscription ID '{subscriptionId}'.",
-                nameof(subscriptionId));
-        }
+        Ensure.Arg.NotWildcard(subscriptionId);
 
         if (!_subscriptions.TryGetValue(subscriptionId, out _))
         {
@@ -155,7 +143,7 @@ public sealed class SubscriptionManager : ISubscriptionManager
         Ensure.Arg.NotNull(subscriptionId);
         Ensure.Arg.NotNull(serviceProvider);
 
-        return !_subscriptions.TryGetValue(subscriptionId, out Subscription? subscription)
+        return !_subscriptions.TryGetValue(subscriptionId, out Subscriber? subscription)
             ? NoOpListener.Instance
             : subscription.ListenerFactory(serviceProvider);
     }

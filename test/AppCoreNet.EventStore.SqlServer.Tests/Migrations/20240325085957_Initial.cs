@@ -23,7 +23,7 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                         .Annotation("SqlServer:Identity", "0, 1"),
                     StreamId = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
                     Sequence = table.Column<long>(type: "bigint", nullable: false),
-                    Position = table.Column<long>(type: "bigint", nullable: false)
+                    Index = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -60,7 +60,7 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                     EventStreamId = table.Column<int>(type: "int", nullable: false),
                     EventType = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    Position = table.Column<long>(type: "bigint", nullable: false),
+                    Index = table.Column<long>(type: "bigint", nullable: false),
                     Data = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -84,10 +84,10 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                 column: "EventStreamId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Event_EventStreamId_Position",
+                name: "IX_Event_EventStreamId_Index",
                 schema: "events",
                 table: "Event",
-                columns: new[] { "EventStreamId", "Position" },
+                columns: new[] { "EventStreamId", "Index" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -119,7 +119,8 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                 name: "IX_EventSubscription_SubscriptionId",
                 schema: "events",
                 table: "EventSubscription",
-                column: "SubscriptionId");
+                column: "SubscriptionId",
+                unique: true);
 
             migrationBuilder.CreateEventStore(schema: "events");
         }
@@ -127,8 +128,6 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropEventStore(schema: "events");
-
             migrationBuilder.DropTable(
                 name: "Event",
                 schema: "events");

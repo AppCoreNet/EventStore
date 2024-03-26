@@ -38,11 +38,11 @@ public readonly struct StreamState : IFormattable, IEquatable<StreamState>
     }
 
     /// <summary>
-    /// Creates an instance of <see cref="StreamPosition"/> with the provided position.
+    /// Creates an instance of <see cref="StreamPosition"/> with the provided event index.
     /// </summary>
     /// <param name="value">The value.</param>
-    /// <returns>The expected stream position.</returns>
-    public static StreamState Position(long value)
+    /// <returns>The expected event index.</returns>
+    public static StreamState Index(long value)
     {
         Ensure.Arg.InRange(value, 0, long.MaxValue);
         return new StreamState(value);
@@ -110,7 +110,7 @@ public readonly struct StreamState : IFormattable, IEquatable<StreamState>
     /// <summary>
     /// Implicitly converts a <c>long</c> to an instance of <see cref="StreamState"/>.
     /// </summary>
-    /// <param name="position">The value.</param>
+    /// <param name="index">The value.</param>
     /// <returns>The <see cref="StreamState"/>.</returns>
-    public static implicit operator StreamState(long position) => Position(position);
+    public static implicit operator StreamState(long index) => Index(index);
 }

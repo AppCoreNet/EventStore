@@ -36,7 +36,7 @@ public abstract class EventStoreTests : IAsyncLifetime
     {
         -2 => StreamState.Any,
         -1 => StreamState.None,
-        _ => StreamState.Position(value)
+        _ => StreamState.Index(value)
     };
 
     private static StreamPosition CreateStreamPosition(long value) => value switch
@@ -136,7 +136,7 @@ public abstract class EventStoreTests : IAsyncLifetime
         };
 
         await Assert.ThrowsAsync<StreamStateException>(
-            async () => await eventStore.WriteAsync(streamId, events, StreamState.Position(0)));
+            async () => await eventStore.WriteAsync(streamId, events, StreamState.Index(0)));
     }
 
     [Theory]
@@ -202,8 +202,8 @@ public abstract class EventStoreTests : IAsyncLifetime
                   new[] { events[0], events[1] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.StreamPosition)
-                       .Excluding(e => e.Metadata.GlobalPosition));
+                       .Excluding(e => e.Metadata.Index)
+                       .Excluding(e => e.Metadata.Sequence));
     }
 
     [Fact]
@@ -239,8 +239,8 @@ public abstract class EventStoreTests : IAsyncLifetime
                   new[] { events[2] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.StreamPosition)
-                       .Excluding(e => e.Metadata.GlobalPosition));
+                       .Excluding(e => e.Metadata.Index)
+                       .Excluding(e => e.Metadata.Sequence));
     }
 
     [Fact]
@@ -276,8 +276,8 @@ public abstract class EventStoreTests : IAsyncLifetime
                   new[] { events[2], events[1] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.StreamPosition)
-                       .Excluding(e => e.Metadata.GlobalPosition));
+                       .Excluding(e => e.Metadata.Index)
+                       .Excluding(e => e.Metadata.Sequence));
     }
 
     [Fact]
@@ -313,8 +313,8 @@ public abstract class EventStoreTests : IAsyncLifetime
                   new[] { events[0] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.StreamPosition)
-                       .Excluding(e => e.Metadata.GlobalPosition));
+                       .Excluding(e => e.Metadata.Index)
+                       .Excluding(e => e.Metadata.Sequence));
     }
 
     [Fact]
@@ -350,8 +350,8 @@ public abstract class EventStoreTests : IAsyncLifetime
                   new[] { events[1], events[2] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.StreamPosition)
-                       .Excluding(e => e.Metadata.GlobalPosition));
+                       .Excluding(e => e.Metadata.Index)
+                       .Excluding(e => e.Metadata.Sequence));
     }
 
     [Fact]
@@ -387,8 +387,8 @@ public abstract class EventStoreTests : IAsyncLifetime
                   new[] { events[1], events[0] },
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
-                       .Excluding(e => e.Metadata.StreamPosition)
-                       .Excluding(e => e.Metadata.GlobalPosition));
+                       .Excluding(e => e.Metadata.Index)
+                       .Excluding(e => e.Metadata.Sequence));
     }
 
     [Theory]
@@ -468,7 +468,7 @@ public abstract class EventStoreTests : IAsyncLifetime
               .BeNull();
 
         await eventStore.WriteAsync(streamId + "-2", events, StreamState.None);
-        await eventStore.WriteAsync(streamId, events, StreamState.Position(1));
+        await eventStore.WriteAsync(streamId, events, StreamState.Index(1));
 
         result = await eventStore.WatchAsync(streamId, lastResult.Position, TimeSpan.FromSeconds(5));
         lastResult = result!;

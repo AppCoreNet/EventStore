@@ -65,6 +65,7 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
         var events = new[]
         {
             new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "name"),
         };
         await eventStore.WriteAsync(streamId, events, StreamState.None);
     }
@@ -77,6 +78,35 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
 
         var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
         await subscriptionStore.CreateAsync(Guid.NewGuid().ToString("N"), StreamId.All);
+    }
+
+    [Fact]
+    public async Task CreateExistingSubscriptionDoesNotThrow()
+    {
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
+
+        var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+
+        string subscriptionId = Guid.NewGuid().ToString("N");
+        await subscriptionStore.CreateAsync(subscriptionId, StreamId.All);
+        await subscriptionStore.CreateAsync(subscriptionId, StreamId.All, failIfExists: false);
+    }
+
+    [Fact]
+    public async Task CreateExistingSubscriptionThrows()
+    {
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
+
+        var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+
+        string subscriptionId = Guid.NewGuid().ToString("N");
+        await subscriptionStore.CreateAsync(subscriptionId, StreamId.All);
+
+        await Assert.ThrowsAsync<EventStoreException>(
+            async () =>
+                await subscriptionStore.CreateAsync(subscriptionId, StreamId.All, failIfExists: true));
     }
 
     [Fact]
@@ -105,7 +135,7 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
               .Be(streamId);
 
         result.Position.Should()
-              .Be(0);
+              .Be(StreamPosition.Start);
     }
 
     [Fact]
@@ -169,7 +199,7 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
              .NotBeNull();
 
         IReadOnlyCollection<EventEnvelope> events = await eventStore.ReadAsync(watch!.StreamId, watch.Position);
-        await subscriptionStore.UpdateAsync(subscriptionId, events.Last().Metadata.GlobalPosition);
+        await subscriptionStore.UpdateAsync(subscriptionId, events.Last().Metadata.Sequence);
 
         if (transaction != null)
             await transaction.CommitAsync();

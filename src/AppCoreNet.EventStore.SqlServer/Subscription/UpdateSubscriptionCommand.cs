@@ -23,15 +23,18 @@ internal sealed class UpdateSubscriptionCommand : SqlTextCommand
 
     protected override string GetCommandText()
     {
-        return $"UPDATE [{_schema}].{nameof(Model.EventSubscription)}  SET ProcessedAt=SYSUTCDATETIME(), Position=@Position WHERE SubscriptionId=@SubscriptionId";
+        return $"UPDATE [{_schema}].[{nameof(Model.EventSubscription)}] SET"
+               + $" [{nameof(Model.EventSubscription.ProcessedAt)}] = SYSUTCDATETIME(),"
+               + $" [{nameof(Model.EventSubscription.Position)}] = @{nameof(Position)}"
+               + $" WHERE [{nameof(Model.EventSubscription.SubscriptionId)}] = @{nameof(SubscriptionId)}";
     }
 
     protected override SqlParameter[] GetCommandParameters()
     {
         return
         [
-            new SqlParameter("@SubscriptionId", SubscriptionId.Value),
-            new SqlParameter("@Position", Position),
+            new SqlParameter($"@{nameof(SubscriptionId)}", SubscriptionId.Value),
+            new SqlParameter($"@{nameof(Position)}", Position),
         ];
     }
 }

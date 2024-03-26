@@ -46,58 +46,58 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
 
         return $"""
                 CREATE PROCEDURE [{schema}].{ProcedureName} (
-                    @StreamId NVARCHAR({Constants.StreamIdMaxLength}),
-                    @FromPosition BIGINT,
-                    @PollInterval INT,
-                    @Timeout INT
+                    @{nameof(StreamId)} NVARCHAR({Constants.StreamIdMaxLength}),
+                    @{nameof(FromPosition)} BIGINT,
+                    @{nameof(PollInterval)} INT,
+                    @{nameof(Timeout)} INT
                     )
                 AS
                 BEGIN
                     DECLARE @StreamPosition AS BIGINT;
-                    DECLARE @WaitTime AS VARCHAR(12) = CONVERT(VARCHAR(12), DATEADD(ms, @PollInterval, 0), 114);
+                    DECLARE @WaitTime AS VARCHAR(12) = CONVERT(VARCHAR(12), DATEADD(ms, @{nameof(PollInterval)}, 0), 114);
 
-                    IF @FromPosition = -2
+                    IF @{nameof(FromPosition)} = -2
                     BEGIN
-                        IF @StreamId = '{Constants.StreamIdAll}'
+                        IF @{nameof(StreamId)} = '{Constants.StreamIdAll}'
                         BEGIN
-                            SELECT TOP 1 @FromPosition = [Sequence]
-                                FROM [{schema}].EventStream
+                            SELECT TOP 1 @{nameof(FromPosition)} = [{nameof(Model.EventStream.Sequence)}]
+                                FROM [{schema}].[{nameof(Model.EventStream)}]
                                 ORDER BY [Sequence] DESC;
                         END
                         ELSE
                         BEGIN
-                            SELECT TOP 1 @FromPosition = Position
-                                FROM [{schema}].EventStream
-                                WHERE StreamId = @StreamId;
+                            SELECT TOP 1 @{nameof(FromPosition)} = [{nameof(Model.EventStream.Index)}]
+                                FROM [{schema}].[{nameof(Model.EventStream)}]
+                                WHERE [{nameof(Model.EventStream.StreamId)}] = @{nameof(StreamId)};
                         END
-                        IF @FromPosition IS NULL SET @FromPosition = -1;
+                        IF @{nameof(FromPosition)} IS NULL SET @{nameof(FromPosition)} = -1;
                     END
 
                     WHILE @StreamPosition IS NULL
                     BEGIN
-                        IF @StreamId = '{Constants.StreamIdAll}'
+                        IF @{nameof(StreamId)} = '{Constants.StreamIdAll}'
                         BEGIN
-                            SELECT TOP 1 @StreamPosition = [Sequence]
-                                FROM [{schema}].EventStream
-                                WHERE [Sequence] > @FromPosition
-                                ORDER BY [Sequence] DESC;
+                            SELECT TOP 1 @StreamPosition = [{nameof(Model.EventStream.Sequence)}]
+                                FROM [{schema}].[{nameof(Model.EventStream)}]
+                                WHERE [{nameof(Model.EventStream.Sequence)}] > @{nameof(FromPosition)}
+                                ORDER BY [{nameof(Model.EventStream.Sequence)}] DESC;
                         END
                         ELSE
                         BEGIN
-                            SELECT TOP 1 @StreamPosition = Position
-                                FROM [{schema}].EventStream
-                                WHERE StreamId = @StreamId AND [Position] > @FromPosition;
+                            SELECT TOP 1 @StreamPosition = [{nameof(Model.EventStream.Index)}]
+                                FROM [{schema}].[{nameof(Model.EventStream)}]
+                                WHERE StreamId = @{nameof(StreamId)} AND [{nameof(Model.EventStream.Index)}] > @{nameof(FromPosition)};
                         END
 
                         IF @StreamPosition IS NULL
                         BEGIN
                             WAITFOR DELAY @WaitTime;
-                            SET @Timeout = @Timeout - @PollInterval;
-                            IF @Timeout <= 0 BREAK;
+                            SET @{nameof(Timeout)} = @{nameof(Timeout)} - @{nameof(PollInterval)};
+                            IF @{nameof(Timeout)} <= 0 BREAK;
                         END
                     END
 
-                    SELECT @StreamPosition AS Position;
+                    SELECT @StreamPosition AS [{nameof(Model.WatchEventsResult.Position)}];
                 END
                 """;
     }
@@ -111,10 +111,10 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
     {
         return
         [
-            new SqlParameter("@StreamId", StreamId.Value),
-            new SqlParameter("@FromPosition", FromPosition.Value),
-            new SqlParameter("@PollInterval", (int)PollInterval.TotalMilliseconds),
-            new SqlParameter("@Timeout", (int)Timeout.TotalMilliseconds),
+            new SqlParameter($"@{nameof(StreamId)}", StreamId.Value),
+            new SqlParameter($"@{nameof(FromPosition)}", FromPosition.Value),
+            new SqlParameter($"@{nameof(PollInterval)}", (int)PollInterval.TotalMilliseconds),
+            new SqlParameter($"@{nameof(Timeout)}", (int)Timeout.TotalMilliseconds),
         ];
     }
 }

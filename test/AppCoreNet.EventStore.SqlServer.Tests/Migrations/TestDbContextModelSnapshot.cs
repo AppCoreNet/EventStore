@@ -22,25 +22,6 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.BeginUpdateSubscriptionResult", b =>
-                {
-                    b.Property<int?>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<long?>("Position")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("StreamId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SubscriptionId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.ToTable((string)null);
-
-                    b.ToView(null, (string)null);
-                });
-
             modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.Event", b =>
                 {
                     b.Property<long>("Sequence")
@@ -64,11 +45,11 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
+                    b.Property<long>("Index")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Metadata")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("Position")
-                        .HasColumnType("bigint");
 
                     b.HasKey("Sequence");
 
@@ -76,7 +57,7 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
 
                     b.HasIndex("EventStreamId");
 
-                    b.HasIndex("EventStreamId", "Position")
+                    b.HasIndex("EventStreamId", "Index")
                         .IsUnique();
 
                     b.ToTable("Event", "events");
@@ -90,7 +71,7 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 0L);
 
-                    b.Property<long>("Position")
+                    b.Property<long>("Index")
                         .HasColumnType("bigint");
 
                     b.Property<long>("Sequence")
@@ -148,7 +129,8 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
 
                     b.HasIndex("ProcessedAt");
 
-                    b.HasIndex("SubscriptionId");
+                    b.HasIndex("SubscriptionId")
+                        .IsUnique();
 
                     b.ToTable("EventSubscription", "events");
                 });
@@ -184,7 +166,7 @@ namespace AppCoreNet.EventStore.SqlServer.Migrations
 
             modelBuilder.Entity("AppCoreNet.EventStore.SqlServer.Model.WriteEventsResult", b =>
                 {
-                    b.Property<long?>("Position")
+                    b.Property<long?>("Index")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("Sequence")

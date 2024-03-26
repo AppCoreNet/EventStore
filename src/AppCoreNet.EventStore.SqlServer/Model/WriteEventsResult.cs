@@ -9,5 +9,5 @@ internal sealed class WriteEventsResult
 
     public long? Sequence { get; set; }
 
-    public long? Position { get; set; }
+    public long? Index { get; set; }
 }

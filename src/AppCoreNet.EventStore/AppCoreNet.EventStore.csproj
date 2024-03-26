@@ -28,4 +28,10 @@
     <PackageReference Include="System.Text.Json" Version="8.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\Ensure.cs">
+      <Link>Ensure.cs</Link>
+    </Compile>
+  </ItemGroup>
+
 </Project>

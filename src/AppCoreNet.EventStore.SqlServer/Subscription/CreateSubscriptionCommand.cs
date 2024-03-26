@@ -25,19 +25,46 @@ internal sealed class CreateSubscriptionCommand : SqlTextCommand
 
     protected override string GetCommandText()
     {
-        string tableName = $"[{_schema}].{nameof(Model.EventSubscription)}";
+        string tableName = $"[{_schema}].[{nameof(Model.EventSubscription)}]";
 
-        return FailIfExists
-            ? $"INSERT INTO {tableName} (SubscriptionId, StreamId, CreatedAt, Position) VALUES (@SubscriptionId, @StreamId, SYSUTCDATETIME(), {StreamPosition.Start.Value})"
-            : $"INSERT INTO {tableName} (SubscriptionId, StreamId, CreatedAt, Position) SELECT @SubscriptionId, @StreamId, SYSUTCDATETIME(), {StreamPosition.Start.Value} WHERE NOT EXISTS (SELECT 1 FROM {tableName} WHERE SubscriptionId=@SubscriptionId)";
+        if (FailIfExists)
+        {
+            return $"""
+                    INSERT INTO {tableName}
+                        ([{nameof(Model.EventSubscription.SubscriptionId)}],
+                         [{nameof(Model.EventSubscription.StreamId)}],
+                         [{nameof(Model.EventSubscription.CreatedAt)}],
+                         [{nameof(Model.EventSubscription.Position)}])
+                    VALUES
+                        (@{nameof(SubscriptionId)},
+                         @{nameof(StreamId)},
+                         SYSUTCDATETIME(),
+                         {StreamPosition.Start.Value})
+                    """;
+        }
+
+        return $"""
+                INSERT INTO {tableName}
+                    ([{nameof(Model.EventSubscription.SubscriptionId)}],
+                     [{nameof(Model.EventSubscription.StreamId)}],
+                     [{nameof(Model.EventSubscription.CreatedAt)}],
+                     [{nameof(Model.EventSubscription.Position)}])
+                SELECT
+                    @{nameof(SubscriptionId)},
+                    @{nameof(StreamId)},
+                    SYSUTCDATETIME(),
+                    {StreamPosition.Start.Value}
+                WHERE NOT EXISTS
+                    (SELECT 1 FROM {tableName} WHERE [{nameof(Model.EventSubscription.SubscriptionId)}] = @{nameof(SubscriptionId)})
+                """;
     }
 
     protected override SqlParameter[] GetCommandParameters()
     {
         return
         [
-            new SqlParameter("@SubscriptionId", SubscriptionId.Value),
-            new SqlParameter("@StreamId", StreamId.Value),
+            new SqlParameter($"@{nameof(SubscriptionId)}", SubscriptionId.Value),
+            new SqlParameter($"@{nameof(StreamId)}", StreamId.Value),
         ];
     }
 }

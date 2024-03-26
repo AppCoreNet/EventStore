@@ -25,4 +25,10 @@
     <ProjectReference Include="..\AppCoreNet.EventStore\AppCoreNet.EventStore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\Ensure.cs">
+      <Link>Ensure.cs</Link>
+    </Compile>
+  </ItemGroup>
+
 </Project>

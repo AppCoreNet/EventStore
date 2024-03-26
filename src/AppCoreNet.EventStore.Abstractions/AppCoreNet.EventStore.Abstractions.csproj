@@ -10,4 +10,10 @@
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\Ensure.cs">
+      <Link>Ensure.cs</Link>
+    </Compile>
+  </ItemGroup>
+
 </Project>

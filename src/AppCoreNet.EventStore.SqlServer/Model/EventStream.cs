@@ -16,12 +16,12 @@ internal sealed class EventStream
     required public string StreamId { get; init; }
 
     /// <summary>
-    /// Gets the last sequence of the stream.
+    /// Gets the last sequence number used by the stream.
     /// </summary>
     public long Sequence { get; init; }
 
     /// <summary>
-    /// Gets the current position of the stream.
+    /// Gets the current index of the stream.
     /// </summary>
-    public long Position { get; init; }
+    public long Index { get; init; }
 }

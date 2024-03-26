@@ -2,6 +2,7 @@
 // Copyright (c) The AppCore .NET project.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +13,8 @@ namespace AppCoreNet.EventStore.Subscription;
 /// </summary>
 public interface ISubscriptionStore
 {
+    IAsyncEnumerable<Subscription> GetAllAsync(CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Creates a subscription.
     /// </summary>
