@@ -10,7 +10,7 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 public abstract class SubscriptionStoreTests : IAsyncLifetime
 {

@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Manages subscription listeners.

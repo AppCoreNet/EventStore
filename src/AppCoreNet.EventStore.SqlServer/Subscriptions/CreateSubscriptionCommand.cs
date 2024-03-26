@@ -1,11 +1,11 @@
 ﻿// Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
-using AppCoreNet.EventStore.Subscription;
+using AppCoreNet.EventStore.Subscriptions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace AppCoreNet.EventStore.SqlServer.Subscription;
+namespace AppCoreNet.EventStore.SqlServer.Subscriptions;
 
 internal sealed class CreateSubscriptionCommand : SqlTextCommand
 {

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Represents the event subscription store.

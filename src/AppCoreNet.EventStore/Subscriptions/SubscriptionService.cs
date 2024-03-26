@@ -9,7 +9,7 @@ using AppCoreNet.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Watches subscriptions and invokes registered listeners.

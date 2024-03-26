@@ -3,7 +3,7 @@
 
 using System;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 internal sealed class Subscriber
 {

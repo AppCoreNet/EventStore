@@ -3,7 +3,7 @@
 
 using AppCoreNet.Diagnostics;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Exception which is thrown when a subscription was not found.

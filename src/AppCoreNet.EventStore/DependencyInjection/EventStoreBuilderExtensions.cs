@@ -4,7 +4,7 @@
 using System;
 using AppCoreNet.Diagnostics;
 using AppCoreNet.EventStore.Serialization;
-using AppCoreNet.EventStore.Subscription;
+using AppCoreNet.EventStore.Subscriptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

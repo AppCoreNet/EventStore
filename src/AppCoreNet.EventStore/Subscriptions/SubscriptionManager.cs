@@ -9,7 +9,7 @@ using AppCoreNet.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Provides the default implementation of <see cref="ISubscriptionManager"/>.

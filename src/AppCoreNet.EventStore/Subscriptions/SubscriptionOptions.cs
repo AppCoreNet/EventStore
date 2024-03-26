@@ -7,7 +7,7 @@ using System.Linq;
 using AppCoreNet.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Provides options for subscriptions.

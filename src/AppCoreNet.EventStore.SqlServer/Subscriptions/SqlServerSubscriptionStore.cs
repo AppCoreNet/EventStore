@@ -8,11 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Diagnostics;
-using AppCoreNet.EventStore.Subscription;
+using AppCoreNet.EventStore.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace AppCoreNet.EventStore.SqlServer.Subscription;
+namespace AppCoreNet.EventStore.SqlServer.Subscriptions;
 
 /// <summary>
 /// Provides a <see cref="ISubscriptionStore"/> implementation using SQL Server.
@@ -43,7 +43,7 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<EventStore.Subscription.Subscription> GetAllAsync(
+    public async IAsyncEnumerable<Subscription> GetAllAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IAsyncEnumerable<Model.EventSubscription> enumerable =
@@ -54,7 +54,7 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
         await foreach (Model.EventSubscription subscription in enumerable.WithCancellation(cancellationToken)
                                                                          .ConfigureAwait(false))
         {
-            yield return new EventStore.Subscription.Subscription(
+            yield return new Subscription(
                 subscription.SubscriptionId,
                 subscription.StreamId,
                 subscription.Position,

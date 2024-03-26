@@ -4,7 +4,7 @@
 using System;
 using AppCoreNet.Diagnostics;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Provides information about a subscription.

@@ -4,7 +4,7 @@
 using System.Threading.Tasks;
 using AppCoreNet.Data;
 using AppCoreNet.Data.EntityFrameworkCore;
-using AppCoreNet.EventStore.Subscription;
+using AppCoreNet.EventStore.Subscriptions;
 using AppCoreNet.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using NSubstitute;
 using Xunit;
 
-namespace AppCoreNet.EventStore.SqlServer.Subscription;
+namespace AppCoreNet.EventStore.SqlServer.Subscriptions;
 
 [Collection(SqlServerTestCollection.Name)]
 [Trait("Category", "Integration")]

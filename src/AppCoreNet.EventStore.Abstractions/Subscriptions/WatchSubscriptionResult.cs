@@ -3,7 +3,7 @@
 
 using AppCoreNet.Diagnostics;
 
-namespace AppCoreNet.EventStore.Subscription;
+namespace AppCoreNet.EventStore.Subscriptions;
 
 /// <summary>
 /// Represents the result of <see cref="ISubscriptionStore.WatchAsync"/>.
