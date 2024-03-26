@@ -18,5 +18,13 @@ public class SqlServerEventStoreOptions
     /// <summary>
     /// Gets or sets the name of the event store database schema.
     /// </summary>
+    /// <remarks>
+    /// If <c>null</c> the schema defaults to <c>dbo</c>.
+    /// </remarks>
     public string? SchemaName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the application name.
+    /// </summary>
+    public string? ApplicationName { get; set; }
 }

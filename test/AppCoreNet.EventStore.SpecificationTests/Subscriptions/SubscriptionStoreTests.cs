@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using AppCoreNet.Extensions.DependencyInjection;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using NSubstitute;
 using Xunit;
 
 namespace AppCoreNet.EventStore.Subscriptions;
@@ -23,6 +25,11 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
 
     protected virtual void ConfigureServices(IServiceCollection services)
     {
+        var hostEnvironment = Substitute.For<IHostEnvironment>();
+        hostEnvironment.ApplicationName.Returns(typeof(SubscriptionStoreTests).Assembly.FullName);
+
+        services.AddTransient<IHostEnvironment>(_ => hostEnvironment);
+
         services.AddEventStore()
                 .AddJsonSerializer(
                     o =>

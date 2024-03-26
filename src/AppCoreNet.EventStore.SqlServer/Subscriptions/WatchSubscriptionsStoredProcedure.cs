@@ -17,6 +17,8 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
 
     required public TimeSpan Timeout { get; init; }
 
+    required public string LockResource { get; init; }
+
     public WatchSubscriptionsStoredProcedure(DbContext dbContext, string? schema)
         : base(dbContext, $"[{SchemaUtils.GetEventStoreSchema(schema)}].{ProcedureName}")
     {
@@ -43,7 +45,8 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
         return $"""
                 CREATE PROCEDURE [{schema}].{ProcedureName} (
                     @{nameof(PollInterval)} INT,
-                    @{nameof(Timeout)} INT
+                    @{nameof(Timeout)} INT,
+                    @{nameof(LockResource)} NVARCHAR(max)
                     )
                 AS
                 BEGIN
@@ -52,40 +55,51 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
                     DECLARE @StreamId AS NVARCHAR({Constants.StreamIdMaxLength});
                     DECLARE @Position AS BIGINT;
                     DECLARE @WaitTime AS VARCHAR(12) = CONVERT(VARCHAR(12), DATEADD(ms, @PollInterval, 0), 114);
+                    DECLARE @LockTime AS DATETIME;
+                    DECLARE @LockResult AS INT;
 
-                    WHILE @Id IS NULL
+                    SELECT @LockTime = CURRENT_TIMESTAMP;
+                    EXEC @LockResult = sp_getapplock @Resource = @{nameof(LockResource)}, @LockMode = 'Exclusive', @LockTimeout = @Timeout;
+                    SET @Timeout = @Timeout - DATEDIFF(MILLISECOND, @LockTime, CURRENT_TIMESTAMP);
+
+                    IF @LockResult >= 0
                     BEGIN
-                        SELECT TOP 1
-                            @Id = SU.[{nameof(Model.EventSubscription.Id)}],
-                            @SubscriptionId = SU.[{nameof(Model.EventSubscription.SubscriptionId)}],
-                            @Position = SU.[{nameof(Model.EventSubscription.Position)}],
-                            @StreamId = SU.[{nameof(Model.EventSubscription.StreamId)}]
-                        FROM
-                            [{schema}].[{nameof(Model.EventSubscription)}] AS SU WITH (UPDLOCK, ROWLOCK, READPAST),
-                            [{schema}].[{nameof(Model.EventStream)}] AS ST
-                        WHERE
-                            (ST.[{nameof(Model.EventStream.StreamId)}] = SU.[{nameof(Model.EventSubscription.StreamId)}]
-                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Index)}])
-                            OR (SU.[{nameof(Model.EventSubscription.StreamId)}] = '{Constants.StreamIdAll}'
-                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
-                            OR (LEFT(SU.[{nameof(Model.EventSubscription.StreamId)}], 1) = '*'
-                                AND ST.[{nameof(Model.EventStream.StreamId)}] LIKE '%' + RIGHT(SU.[{nameof(Model.EventSubscription.StreamId)}], LEN(SU.[{nameof(Model.EventSubscription.StreamId)}])-1)
-                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
-                            OR (RIGHT(SU.[{nameof(Model.EventSubscription.StreamId)}], 1) = '*'
-                                AND ST.[{nameof(Model.EventStream.StreamId)}] LIKE LEFT(SU.[{nameof(Model.EventSubscription.StreamId)}], LEN(SU.[{nameof(Model.EventSubscription.StreamId)}])-1) + '%'
-                                AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
-                        ORDER BY
-                            SU.[{nameof(Model.EventSubscription.ProcessedAt)}],
-                            ST.[{nameof(Model.EventStream.Sequence)}]
-                            DESC;
-
-                        IF @Id IS NULL
+                        WHILE @Id IS NULL
                         BEGIN
-                            WAITFOR DELAY @WaitTime;
-                            SET @{nameof(Timeout)} = @{nameof(Timeout)} - @{nameof(PollInterval)};
-                            IF @{nameof(Timeout)} <= 0 BREAK;
+                            SELECT TOP 1
+                                @Id = SU.[{nameof(Model.EventSubscription.Id)}],
+                                @SubscriptionId = SU.[{nameof(Model.EventSubscription.SubscriptionId)}],
+                                @Position = SU.[{nameof(Model.EventSubscription.Position)}],
+                                @StreamId = SU.[{nameof(Model.EventSubscription.StreamId)}]
+                            FROM
+                                [{schema}].[{nameof(Model.EventSubscription)}] AS SU WITH (UPDLOCK, ROWLOCK, READPAST),
+                                [{schema}].[{nameof(Model.EventStream)}] AS ST
+                            WHERE
+                                (ST.[{nameof(Model.EventStream.StreamId)}] = SU.[{nameof(Model.EventSubscription.StreamId)}]
+                                    AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Index)}])
+                                OR (SU.[{nameof(Model.EventSubscription.StreamId)}] = '{Constants.StreamIdAll}'
+                                    AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
+                                OR (LEFT(SU.[{nameof(Model.EventSubscription.StreamId)}], 1) = '*'
+                                    AND ST.[{nameof(Model.EventStream.StreamId)}] LIKE '%' + RIGHT(SU.[{nameof(Model.EventSubscription.StreamId)}], LEN(SU.[{nameof(Model.EventSubscription.StreamId)}])-1)
+                                    AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
+                                OR (RIGHT(SU.[{nameof(Model.EventSubscription.StreamId)}], 1) = '*'
+                                    AND ST.[{nameof(Model.EventStream.StreamId)}] LIKE LEFT(SU.[{nameof(Model.EventSubscription.StreamId)}], LEN(SU.[{nameof(Model.EventSubscription.StreamId)}])-1) + '%'
+                                    AND SU.[{nameof(Model.EventSubscription.Position)}] < ST.[{nameof(Model.EventStream.Sequence)}])
+                            ORDER BY
+                                SU.[{nameof(Model.EventSubscription.ProcessedAt)}],
+                                ST.[{nameof(Model.EventStream.Sequence)}]
+                                DESC;
+
+                            IF @Id IS NULL
+                            BEGIN
+                                WAITFOR DELAY @WaitTime;
+                                SET @{nameof(Timeout)} = @{nameof(Timeout)} - @{nameof(PollInterval)};
+                                IF @{nameof(Timeout)} <= 0 BREAK;
+                            END
                         END
                     END
+
+                    EXEC sp_releaseapplock @Resource = @{nameof(LockResource)}
 
                     SELECT
                         @Id AS [{nameof(Model.WatchSubscriptionsResult.Id)}],
@@ -107,6 +121,7 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
         [
             new SqlParameter($"@{nameof(PollInterval)}", (int)PollInterval.TotalMilliseconds),
             new SqlParameter($"@{nameof(Timeout)}", (int)Timeout.TotalMilliseconds),
+            new SqlParameter($"@{nameof(LockResource)}", LockResource),
         ];
     }
 }

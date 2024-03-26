@@ -51,8 +51,9 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
                       .AsNoTracking()
                       .AsAsyncEnumerable();
 
-        await foreach (Model.EventSubscription subscription in enumerable.WithCancellation(cancellationToken)
-                                                                         .ConfigureAwait(false))
+        await foreach (Model.EventSubscription subscription in
+                       enumerable.WithCancellation(cancellationToken)
+                                 .ConfigureAwait(false))
         {
             yield return new Subscription(
                 subscription.SubscriptionId,
@@ -122,6 +123,7 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
             {
                 PollInterval = _options.PollInterval,
                 Timeout = timeout,
+                LockResource = _options.ApplicationName + "-WatchSubscriptions",
             };
 
             Model.WatchSubscriptionsResult result =

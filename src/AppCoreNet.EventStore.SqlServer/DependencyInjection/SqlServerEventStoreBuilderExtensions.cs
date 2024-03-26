@@ -12,10 +12,14 @@ using AppCoreNet.EventStore.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 // ReSharper disable once CheckNamespace
 namespace AppCoreNet.Extensions.DependencyInjection;
 
+/// <summary>
+/// Provides extension methods to register SQL Server event store with the DI container.
+/// </summary>
 public static class SqlServerEventStoreBuilderExtensions
 {
     private static void AddSqlServer<TDbContext>(
@@ -47,6 +51,7 @@ public static class SqlServerEventStoreBuilderExtensions
 
         services.TryAddEnumerable(
         [
+            ServiceDescriptor.Transient<IPostConfigureOptions<SqlServerEventStoreOptions>, SqlServerConfigureEventStoreOptions>(),
             ServiceDescriptor.Transient<IEventStore, SqlServerEventStore<TDbContext>>(),
             ServiceDescriptor.Transient<ISubscriptionStore, SqlServerSubscriptionStore<TDbContext>>(),
         ]);
