@@ -26,5 +26,8 @@ public class SqlServerEventStoreOptions
     /// <summary>
     /// Gets or sets the application name.
     /// </summary>
+    /// <remarks>
+    /// The application name is used to acquire database locks to reduce polling when watching subscriptions.
+    /// </remarks>
     public string? ApplicationName { get; set; }
 }

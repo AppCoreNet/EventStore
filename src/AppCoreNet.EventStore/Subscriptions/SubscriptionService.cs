@@ -90,49 +90,46 @@ public sealed class SubscriptionService : BackgroundService
                 watchResult = await subscriptionStore.WatchAsync(TimeSpan.FromMinutes(1), cancellationToken)
                                                      .ConfigureAwait(false);
 
-                if (watchResult != null)
+                if (watchResult == null)
+                    continue;
+
+                IReadOnlyCollection<EventEnvelope> events =
+                    await store.ReadAsync(
+                                   watchResult.StreamId,
+                                   watchResult.Position.Value + 1,
+                                   maxCount: 1024,
+                                   cancellationToken: cancellationToken)
+                               .ConfigureAwait(false);
+
+                ISubscriptionListener listener = _subscriptionManager.CreateListener(
+                    watchResult.SubscriptionId,
+                    serviceProvider);
+
+                long lastPosition = watchResult.Position.Value;
+                foreach (EventEnvelope @event in events)
                 {
-                    IReadOnlyCollection<EventEnvelope> events =
-                        await store.ReadAsync(
-                                       watchResult.StreamId,
-                                       watchResult.Position.Value + 1,
-                                       maxCount: 1024,
-                                       cancellationToken: cancellationToken)
-                                   .ConfigureAwait(false);
-
-                    ISubscriptionListener listener = _subscriptionManager.CreateListener(
-                        watchResult.SubscriptionId,
-                        serviceProvider);
-
-                    long lastPosition = watchResult.Position.Value;
-                    foreach (EventEnvelope @event in events)
+                    try
                     {
-                        try
-                        {
-                            await listener.HandleAsync(watchResult.SubscriptionId, @event, cancellationToken)
-                                          .ConfigureAwait(false);
+                        await listener.HandleAsync(watchResult.SubscriptionId, @event, cancellationToken)
+                                      .ConfigureAwait(false);
 
-                            lastPosition = watchResult.StreamId.IsWildcard
-                                ? @event.Metadata.Sequence
-                                : @event.Metadata.Index;
-                        }
-                        catch
-                        {
-                            break;
-                        }
+                        lastPosition = watchResult.StreamId.IsWildcard
+                            ? @event.Metadata.Sequence
+                            : @event.Metadata.Index;
                     }
-
-                    await subscriptionStore.UpdateAsync(watchResult.SubscriptionId, lastPosition, cancellationToken)
-                                           .ConfigureAwait(false);
-
-                    if (transaction != null)
+                    catch
                     {
-                        await transaction.CommitAsync(cancellationToken)
-                                         .ConfigureAwait(false);
-
-                        await transaction.DisposeAsync()
-                                         .ConfigureAwait(false);
+                        break;
                     }
+                }
+
+                await subscriptionStore.UpdateAsync(watchResult.SubscriptionId, lastPosition, cancellationToken)
+                                       .ConfigureAwait(false);
+
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync(cancellationToken)
+                                     .ConfigureAwait(false);
                 }
             }
         }

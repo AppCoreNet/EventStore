@@ -144,7 +144,7 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
     {
         Ensure.Arg.NotNull(subscriptionId);
         Ensure.Arg.NotWildcard(subscriptionId);
-        Ensure.Arg.InRange(position, 0, long.MaxValue);
+        Ensure.Arg.InRange(position, StreamPosition.Start.Value, long.MaxValue);
 
         var updateCommand = new UpdateSubscriptionCommand(_dbContext, _options.SchemaName)
         {
