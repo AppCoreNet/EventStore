@@ -22,13 +22,13 @@ public sealed class SubscriptionOptions
     }
 
     /// <summary>
-    /// Configures a subscription.
+    /// Adds a subscription.
     /// </summary>
     /// <param name="subscriptionId">The subscription ID.</param>
     /// <param name="streamId">The stream ID.</param>
     /// <param name="listenerFactory">The factory used to create the <see cref="ISubscriptionListener"/>.</param>
     /// <returns>The <see cref="SubscriptionOptions"/> instance to allow chaining.</returns>
-    public SubscriptionOptions Subscribe(
+    public SubscriptionOptions Add(
         SubscriptionId subscriptionId,
         StreamId streamId,
         Func<IServiceProvider, ISubscriptionListener> listenerFactory)
@@ -40,7 +40,7 @@ public sealed class SubscriptionOptions
 
         if (_subscribers.ContainsKey(subscriptionId))
         {
-            throw new InvalidOperationException($"Subscription with ID '{subscriptionId}' already exists.");
+            throw new InvalidOperationException($"Subscription with ID '{subscriptionId}' already added.");
         }
 
         _subscribers.Add(subscriptionId, new Subscriber(streamId, listenerFactory));
@@ -48,36 +48,36 @@ public sealed class SubscriptionOptions
     }
 
     /// <summary>
-    /// Configures a subscription.
+    /// Adds a subscription.
     /// </summary>
     /// <param name="subscriptionId">The subscription ID.</param>
     /// <param name="streamId">The stream ID.</param>
     /// <param name="listener">The <see cref="ISubscriptionListener"/>.</param>
     /// <returns>The <see cref="SubscriptionOptions"/> instance to allow chaining.</returns>
-    public SubscriptionOptions Subscribe(
+    public SubscriptionOptions Add(
         SubscriptionId subscriptionId,
         StreamId streamId,
         ISubscriptionListener listener)
     {
         Ensure.Arg.NotNull(listener);
 
-        return Subscribe(
+        return Add(
             subscriptionId,
             streamId,
             _ => listener);
     }
 
     /// <summary>
-    /// Configures a subscription.
+    /// Adds a subscription.
     /// </summary>
     /// <param name="subscriptionId">The subscription ID.</param>
     /// <param name="streamId">The stream ID.</param>
     /// <typeparam name="T">The type of the <see cref="ISubscriptionListener"/>.</typeparam>
     /// <returns>The <see cref="SubscriptionOptions"/> instance to allow chaining.</returns>
-    public SubscriptionOptions Subscribe<T>(SubscriptionId subscriptionId, StreamId streamId)
+    public SubscriptionOptions Add<T>(SubscriptionId subscriptionId, StreamId streamId)
         where T : ISubscriptionListener
     {
-        return Subscribe(
+        return Add(
             subscriptionId,
             streamId,
             sp => ActivatorUtilities.GetServiceOrCreateInstance<T>(sp));

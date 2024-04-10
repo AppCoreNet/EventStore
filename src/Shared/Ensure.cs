@@ -9,8 +9,14 @@ using AppCoreNet.EventStore.Subscriptions;
 // ReSharper disable once CheckNamespace
 namespace AppCoreNet.Diagnostics;
 
+/// <content>
+/// Contains extensions for the Ensure class.
+/// </content>
 internal static partial class Ensure
 {
+    /// <content>
+    /// Contains extensions for the Ensure.Arg class.
+    /// </content>
     internal static partial class Arg
     {
         public static void NotWildcard(

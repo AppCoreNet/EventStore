@@ -87,8 +87,8 @@ public sealed class SubscriptionManagerTests : IDisposable
         StreamId streamId = StreamId.All;
 
         var options = new SubscriptionOptions();
-        options.Subscribe(subscriptionId1, streamId, _ => Listener);
-        options.Subscribe(subscriptionId2, streamId, _ => Listener);
+        options.Add(subscriptionId1, streamId, _ => Listener);
+        options.Add(subscriptionId2, streamId, _ => Listener);
 
         SubscriptionManager manager = CreateSubscriptionManager(options);
         await manager.InitializeAsync();

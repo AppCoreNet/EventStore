@@ -220,4 +220,19 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
         watch.Should()
              .BeNull();
     }
+
+    [Fact]
+    public async Task UpdateSubscriptionToStreamStartSucceeds()
+    {
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
+
+        SubscriptionId subscriptionId = Guid.NewGuid().ToString("N");
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        var subscriptionStore = scope.ServiceProvider.GetRequiredService<ISubscriptionStore>();
+        await subscriptionStore.CreateAsync(subscriptionId, streamId);
+
+        await subscriptionStore.UpdateAsync(subscriptionId, StreamPosition.Start.Value);
+    }
 }

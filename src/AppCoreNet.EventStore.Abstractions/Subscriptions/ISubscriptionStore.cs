@@ -53,5 +53,6 @@ public interface ISubscriptionStore
     /// <param name="position">The new position of the subscription.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="SubscriptionNotFoundException">The subscription was not found.</exception>
     Task UpdateAsync(SubscriptionId subscriptionId, long position, CancellationToken cancellationToken = default);
 }

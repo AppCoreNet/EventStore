@@ -15,7 +15,7 @@ internal sealed class SqlServerConfigureEventStoreOptions : IPostConfigureOption
         _environment = environment;
     }
 
-    public void PostConfigure(string name, SqlServerEventStoreOptions options)
+    public void PostConfigure(string? name, SqlServerEventStoreOptions options)
     {
         if (string.IsNullOrEmpty(options.ApplicationName))
         {

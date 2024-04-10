@@ -8,6 +8,7 @@ using AppCoreNet.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using Xunit;
 
@@ -27,6 +28,10 @@ public class SqlServerEventStoreTests : EventStoreTests
     protected override void ConfigureServices(IServiceCollection services)
     {
         base.ConfigureServices(services);
+
+        var hostEnvironment = Substitute.For<IHostEnvironment>();
+        hostEnvironment.ApplicationName.Returns(typeof(SqlServerEventStoreTests).Assembly.FullName);
+        services.TryAddSingleton(hostEnvironment);
 
         services.TryAddSingleton(Substitute.For<IEntityMapper>());
 

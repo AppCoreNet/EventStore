@@ -130,6 +130,9 @@ public sealed class SubscriptionService : BackgroundService
                 {
                     await transaction.CommitAsync(cancellationToken)
                                      .ConfigureAwait(false);
+
+                    await transaction.DisposeAsync()
+                                     .ConfigureAwait(false);
                 }
             }
         }

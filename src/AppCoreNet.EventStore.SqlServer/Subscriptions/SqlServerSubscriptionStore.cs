@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using AppCoreNet.Data.EntityFrameworkCore;
 using AppCoreNet.Diagnostics;
 using AppCoreNet.EventStore.Subscriptions;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -51,16 +52,31 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
                       .AsNoTracking()
                       .AsAsyncEnumerable();
 
-        await foreach (Model.EventSubscription subscription in
-                       enumerable.WithCancellation(cancellationToken)
-                                 .ConfigureAwait(false))
+        await using ConfiguredCancelableAsyncEnumerable<Model.EventSubscription>.Enumerator enumerator = enumerable
+            .WithCancellation(cancellationToken)
+            .ConfigureAwait(false)
+            .GetAsyncEnumerator();
+
+        do
         {
+            try
+            {
+                if (!await enumerator.MoveNextAsync())
+                    break;
+            }
+            catch (SqlException error)
+            {
+                throw SqlExceptionHelper.Rethrow(error, cancellationToken);
+            }
+
+            Model.EventSubscription subscription = enumerator.Current;
             yield return new Subscription(
                 subscription.SubscriptionId,
                 subscription.StreamId,
                 subscription.Position,
                 subscription.ProcessedAt);
         }
+        while (true);
     }
 
     /// <inheritdoc />
@@ -100,7 +116,7 @@ public sealed class SqlServerSubscriptionStore<TDbContext> : ISubscriptionStore,
 
         if (!subscriptionId.IsWildcard && affectedRows == 0)
         {
-            throw new EventStoreException($"Event subscription with id '{subscriptionId}' does not exist.");
+            throw new SubscriptionNotFoundException(subscriptionId.Value);
         }
     }
 
