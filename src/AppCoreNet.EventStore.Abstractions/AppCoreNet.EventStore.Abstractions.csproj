@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AppCoreNet.Extensions.DependencyInjection.Abstractions" Version="0.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\Shared\Ensure.cs">
       <Link>Ensure.cs</Link>
     </Compile>
