@@ -13,6 +13,11 @@ namespace AppCoreNet.EventStore.Subscriptions;
 /// </summary>
 public interface ISubscriptionStore
 {
+    /// <summary>
+    /// Gets all subscriptions known to the store.
+    /// </summary>
+    /// <param name="cancellationToken">An optional cancellation token.</param>
+    /// <returns>The <see cref="IAsyncEnumerable{T}"/> of <see cref="SubscriptionId"/>.</returns>
     IAsyncEnumerable<Subscription> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>

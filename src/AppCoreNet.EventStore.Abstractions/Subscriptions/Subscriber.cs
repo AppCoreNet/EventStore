@@ -2,6 +2,7 @@
 // Copyright (c) The AppCore .NET project.
 
 using System;
+using AppCoreNet.Diagnostics;
 
 namespace AppCoreNet.EventStore.Subscriptions;
 
@@ -25,11 +26,22 @@ public sealed class Subscriber
     /// </summary>
     public Func<IServiceProvider, ISubscriptionListener> ListenerFactory { get; }
 
-    internal Subscriber(
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Subscriber"/> class.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription ID.</param>
+    /// <param name="streamId">The stream ID.</param>
+    /// <param name="listenerFactory">The factory for the <see cref="ISubscriptionListener"/>.</param>
+    public Subscriber(
         SubscriptionId subscriptionId,
         StreamId streamId,
         Func<IServiceProvider, ISubscriptionListener> listenerFactory)
     {
+        Ensure.Arg.NotNull(subscriptionId);
+        Ensure.Arg.NotWildcard(subscriptionId);
+        Ensure.Arg.NotNull(streamId);
+        Ensure.Arg.NotNull(listenerFactory);
+
         SubscriptionId = subscriptionId;
         StreamId = streamId;
         ListenerFactory = listenerFactory;

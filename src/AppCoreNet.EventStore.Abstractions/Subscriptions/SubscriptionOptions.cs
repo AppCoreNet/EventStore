@@ -37,9 +37,6 @@ public sealed class SubscriptionOptions
         Func<IServiceProvider, ISubscriptionListener> listenerFactory)
     {
         Ensure.Arg.NotNull(subscriptionId);
-        Ensure.Arg.NotWildcard(subscriptionId);
-        Ensure.Arg.NotNull(streamId);
-        Ensure.Arg.NotNull(listenerFactory);
 
         if (_subscribers.ContainsKey(subscriptionId))
         {
