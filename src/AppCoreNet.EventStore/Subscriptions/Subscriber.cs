@@ -5,14 +5,32 @@ using System;
 
 namespace AppCoreNet.EventStore.Subscriptions;
 
-internal sealed class Subscriber
+/// <summary>
+/// Represents a subscriber.
+/// </summary>
+public sealed class Subscriber
 {
+    /// <summary>
+    /// Gets the subscription ID.
+    /// </summary>
+    public SubscriptionId SubscriptionId { get; }
+
+    /// <summary>
+    /// Gets the subscribed stream ID.
+    /// </summary>
     public StreamId StreamId { get; }
 
+    /// <summary>
+    /// Gets the factory used to create the subscription listener.
+    /// </summary>
     public Func<IServiceProvider, ISubscriptionListener> ListenerFactory { get; }
 
-    public Subscriber(StreamId streamId, Func<IServiceProvider, ISubscriptionListener> listenerFactory)
+    internal Subscriber(
+        SubscriptionId subscriptionId,
+        StreamId streamId,
+        Func<IServiceProvider, ISubscriptionListener> listenerFactory)
     {
+        SubscriptionId = subscriptionId;
         StreamId = streamId;
         ListenerFactory = listenerFactory;
     }

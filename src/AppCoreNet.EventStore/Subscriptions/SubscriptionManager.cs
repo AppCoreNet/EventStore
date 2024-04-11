@@ -58,11 +58,15 @@ public sealed class SubscriptionManager : ISubscriptionManager
         {
             var store = serviceProvider.GetRequiredService<ISubscriptionStore>();
 
-            foreach ((SubscriptionId subscriptionId, Subscriber subscriber) in _options.GetSubscribers())
+            foreach (Subscriber subscriber in _options.GetSubscribers())
             {
-                _subscriptions.TryAdd(subscriptionId, subscriber);
+                _subscriptions.TryAdd(subscriber.SubscriptionId, subscriber);
 
-                await store.CreateAsync(subscriptionId, subscriber.StreamId, failIfExists: false, cancellationToken)
+                await store.CreateAsync(
+                               subscriber.SubscriptionId,
+                               subscriber.StreamId,
+                               failIfExists: false,
+                               cancellationToken)
                            .ConfigureAwait(false);
             }
         }
@@ -80,7 +84,7 @@ public sealed class SubscriptionManager : ISubscriptionManager
         Ensure.Arg.NotNull(streamId);
         Ensure.Arg.NotNull(listenerFactory);
 
-        if (!_subscriptions.TryAdd(subscriptionId, new Subscriber(streamId, listenerFactory)))
+        if (!_subscriptions.TryAdd(subscriptionId, new Subscriber(subscriptionId, streamId, listenerFactory)))
         {
             throw new InvalidOperationException($"Subscription with ID '{subscriptionId}' already exists.");
         }

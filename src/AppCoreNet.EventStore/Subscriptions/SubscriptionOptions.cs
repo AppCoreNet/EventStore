@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using AppCoreNet.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,9 +15,13 @@ public sealed class SubscriptionOptions
 {
     private readonly Dictionary<SubscriptionId, Subscriber> _subscribers = new ();
 
-    internal IEnumerable<(SubscriptionId SubscriptionId, Subscriber Subscriber)> GetSubscribers()
+    /// <summary>
+    /// Gets all configured subscriptions.
+    /// </summary>
+    /// <returns>The <see cref="IEnumerable{T}"/> of <see cref="Subscriber"/>.</returns>
+    public IEnumerable<Subscriber> GetSubscribers()
     {
-        return _subscribers.Select(s => (s.Key, s.Value));
+        return _subscribers.Values;
     }
 
     /// <summary>
@@ -43,7 +46,7 @@ public sealed class SubscriptionOptions
             throw new InvalidOperationException($"Subscription with ID '{subscriptionId}' already added.");
         }
 
-        _subscribers.Add(subscriptionId, new Subscriber(streamId, listenerFactory));
+        _subscribers.Add(subscriptionId, new Subscriber(subscriptionId, streamId, listenerFactory));
         return this;
     }
 
