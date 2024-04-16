@@ -3,9 +3,8 @@
 
 using System;
 using AppCoreNet.Diagnostics;
-using AppCoreNet.EventStore.Serialization;
+using AppCoreNet.EventStore.Subscriptions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace
 namespace AppCoreNet.Extensions.DependencyInjection;
@@ -16,18 +15,16 @@ namespace AppCoreNet.Extensions.DependencyInjection;
 public static class EventStoreBuilderExtensions
 {
     /// <summary>
-    /// Configures the JSON serializer for the event store.
+    /// Configures event store subscriptions.
     /// </summary>
     /// <param name="builder">The <see cref="IEventStoreBuilder"/>.</param>
-    /// <param name="configureOptions">A delegate to configure the <see cref="JsonEventStoreSerializerOptions"/>.</param>
+    /// <param name="configureOptions">An optional delegate to configure the <see cref="SubscriptionOptions"/>.</param>
     /// <returns>The passed <see cref="IEventStoreBuilder"/> to allow chaining.</returns>
-    public static IEventStoreBuilder AddJsonSerializer(
+    public static IEventStoreBuilder AddSubscriptions(
         this IEventStoreBuilder builder,
-        Action<JsonEventStoreSerializerOptions>? configureOptions = null)
+        Action<SubscriptionOptions>? configureOptions = null)
     {
         Ensure.Arg.NotNull(builder);
-
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IEventStoreSerializer, JsonEventStoreSerializer>());
 
         if (configureOptions != null)
         {

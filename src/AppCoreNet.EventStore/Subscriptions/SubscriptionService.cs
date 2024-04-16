@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AppCoreNet.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace AppCoreNet.EventStore.Subscriptions;
 
@@ -18,19 +19,26 @@ public sealed class SubscriptionService : BackgroundService
 {
     private readonly SubscriptionManager _subscriptionManager;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IOptionsMonitor<SubscriptionOptions> _optionsMonitor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SubscriptionService"/> class.
     /// </summary>
     /// <param name="subscriptionManager">The <see cref="SubscriptionManager"/> used resolve listeners.</param>
     /// <param name="scopeFactory">The <see cref="IServiceScopeFactory"/>.</param>
-    public SubscriptionService(SubscriptionManager subscriptionManager, IServiceScopeFactory scopeFactory)
+    /// <param name="optionsMonitor">The <see cref="SubscriptionOptions"/>.</param>
+    public SubscriptionService(
+        SubscriptionManager subscriptionManager,
+        IServiceScopeFactory scopeFactory,
+        IOptionsMonitor<SubscriptionOptions> optionsMonitor)
     {
         Ensure.Arg.NotNull(subscriptionManager);
         Ensure.Arg.NotNull(scopeFactory);
+        Ensure.Arg.NotNull(optionsMonitor);
 
         _subscriptionManager = subscriptionManager;
         _scopeFactory = scopeFactory;
+        _optionsMonitor = optionsMonitor;
     }
 
     /// <inheritdoc />
@@ -57,6 +65,7 @@ public sealed class SubscriptionService : BackgroundService
                     await ProcessAsync(
                         serviceProvider.GetRequiredService<IEventStore>(),
                         serviceProvider.GetRequiredService<ISubscriptionStore>(),
+                        _optionsMonitor.CurrentValue,
                         serviceProvider,
                         stoppingToken);
                 }
@@ -71,6 +80,7 @@ public sealed class SubscriptionService : BackgroundService
     private async Task ProcessAsync(
         IEventStore store,
         ISubscriptionStore subscriptionStore,
+        SubscriptionOptions options,
         IServiceProvider serviceProvider,
         CancellationToken cancellationToken)
     {
@@ -96,8 +106,8 @@ public sealed class SubscriptionService : BackgroundService
                 IReadOnlyCollection<EventEnvelope> events =
                     await store.ReadAsync(
                                    watchResult.StreamId,
-                                   watchResult.Position.Value + 1,
-                                   maxCount: 1024,
+                                   watchResult.Position,
+                                   maxCount: options.BatchSize,
                                    cancellationToken: cancellationToken)
                                .ConfigureAwait(false);
 
