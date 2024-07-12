@@ -1,4 +1,4 @@
-﻿// Licensed under the MIT license.
+// Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
 using System;
@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AppCoreNet.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AppCoreNet.EventStore.Subscriptions;
@@ -20,6 +21,7 @@ public sealed class SubscriptionService : BackgroundService
     private readonly SubscriptionManager _subscriptionManager;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IOptionsMonitor<SubscriptionOptions> _optionsMonitor;
+    private readonly ILogger<SubscriptionService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SubscriptionService"/> class.
@@ -30,7 +32,8 @@ public sealed class SubscriptionService : BackgroundService
     public SubscriptionService(
         SubscriptionManager subscriptionManager,
         IServiceScopeFactory scopeFactory,
-        IOptionsMonitor<SubscriptionOptions> optionsMonitor)
+        IOptionsMonitor<SubscriptionOptions> optionsMonitor,
+        ILogger<SubscriptionService> logger)
     {
         Ensure.Arg.NotNull(subscriptionManager);
         Ensure.Arg.NotNull(scopeFactory);
@@ -39,6 +42,7 @@ public sealed class SubscriptionService : BackgroundService
         _subscriptionManager = subscriptionManager;
         _scopeFactory = scopeFactory;
         _optionsMonitor = optionsMonitor;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -127,8 +131,9 @@ public sealed class SubscriptionService : BackgroundService
                             ? @event.Metadata.Sequence
                             : @event.Metadata.Index;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        _logger.LogError(ex, "Error processing event. This action will be retried.");
                         break;
                     }
                 }
