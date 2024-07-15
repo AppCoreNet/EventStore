@@ -110,7 +110,7 @@ public sealed class SubscriptionService : BackgroundService
                 IReadOnlyCollection<EventEnvelope> events =
                     await store.ReadAsync(
                                    watchResult.StreamId,
-                                   watchResult.Position,
+                                   watchResult.Position + 1,
                                    maxCount: options.BatchSize,
                                    cancellationToken: cancellationToken)
                                .ConfigureAwait(false);
