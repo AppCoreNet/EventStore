@@ -1,4 +1,4 @@
-﻿// Licensed under the MIT license.
+// Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
 using System;
@@ -18,12 +18,12 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
     /// <summary>
     /// Specifies to read from the start of the stream.
     /// </summary>
-    public static readonly StreamPosition Start = new (StartValue);
+    public static readonly StreamPosition Start = new(StartValue);
 
     /// <summary>
     /// Specifies to read from the end of the stream.
     /// </summary>
-    public static readonly StreamPosition End = new (EndValue);
+    public static readonly StreamPosition End = new(EndValue);
 
     /// <summary>
     /// Gets the value.
@@ -101,6 +101,18 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
     /// <returns><c>true</c> if both objects are not equal; <c>false</c> otherwise.</returns>
     public static bool operator !=(StreamPosition left, StreamPosition right)
         => !left.Equals(right);
+
+    /// <summary>
+    /// If the position is a specific value then adds the supplied amount to the value.
+    /// Otherwise if the position is a special value, then returns the existing special value.
+    /// </summary>
+    /// <param name="left">The position to which the amount should be added.</param>
+    /// <param name="right">The amount to add.</param>
+    /// <returns>A new position containing the updated value.</returns>
+    public static StreamPosition operator +(StreamPosition left, long right)
+    {
+        return left.Value < 0 ? left : new StreamPosition(left.Value + right);
+    }
 
     /// <summary>
     /// Implicitly converts a <c>long</c> to an instance of <see cref="StreamPosition"/>.
