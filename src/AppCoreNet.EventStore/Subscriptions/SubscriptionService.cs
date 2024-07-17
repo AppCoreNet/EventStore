@@ -29,6 +29,7 @@ public sealed class SubscriptionService : BackgroundService
     /// <param name="subscriptionManager">The <see cref="SubscriptionManager"/> used resolve listeners.</param>
     /// <param name="scopeFactory">The <see cref="IServiceScopeFactory"/>.</param>
     /// <param name="optionsMonitor">The <see cref="SubscriptionOptions"/>.</param>
+    /// <param name="logger">The <see cref="ILogger{TCategoryName}"/>.</param>
     public SubscriptionService(
         SubscriptionManager subscriptionManager,
         IServiceScopeFactory scopeFactory,
