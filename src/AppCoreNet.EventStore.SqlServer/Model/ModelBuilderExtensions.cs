@@ -1,15 +1,27 @@
 ﻿// Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
+using AppCoreNet.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AppCoreNet.EventStore.SqlServer.Model;
 
+/// <summary>
+/// Provides event store related extensions for <see cref="ModelBuilder"/>.
+/// </summary>
 public static class ModelBuilderExtensions
 {
+    /// <summary>
+    /// Applies the event store model.
+    /// </summary>
+    /// <param name="builder">The <see cref="ModelBuilder"/>.</param>
+    /// <param name="schema">The database schema name.</param>
+    /// <returns>The <see cref="ModelBuilder"/> to allow method chaining.</returns>
     public static ModelBuilder ApplyEventStoreConfiguration(this ModelBuilder builder, string? schema = null)
     {
+        Ensure.Arg.NotNull(builder);
+
         schema ??= builder.Model.GetDefaultSchema();
 
         EntityTypeBuilder<EventStream> eventStreamEntity = builder.Entity<EventStream>();

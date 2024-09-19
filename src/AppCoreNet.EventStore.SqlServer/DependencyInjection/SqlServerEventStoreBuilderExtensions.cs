@@ -63,6 +63,15 @@ public static class SqlServerEventStoreBuilderExtensions
         }
     }
 
+    /// <summary>
+    /// Registers the SQL server based event store with the DI container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IEventStoreBuilder"/>.</param>
+    /// <param name="dataProviderName">The name of the SQL server data provider.</param>
+    /// <param name="configureOptions">Delegate used to configure the SQL server event store.</param>
+    /// <param name="lifetime">The lifetime of the <see cref="DbContext"/>.</param>
+    /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
+    /// <returns>The <see cref="IEventStoreBuilder"/> which allows chaining of method calls.</returns>
     public static IEventStoreBuilder AddSqlServer<TDbContext>(
         this IEventStoreBuilder builder,
         string dataProviderName,
@@ -75,6 +84,15 @@ public static class SqlServerEventStoreBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Registers the SQL server based event store with the DI container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IEventStoreBuilder"/>.</param>
+    /// <param name="dataProviderName">The name of the SQL server data provider.</param>
+    /// <param name="configureOptions">Delegate used to configure the SQL server event store.</param>
+    /// <param name="lifetime">The lifetime of the <see cref="DbContext"/>.</param>
+    /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
+    /// <returns>The <see cref="IEventStoreBuilder"/> which allows chaining of method calls.</returns>
     public static IEventStoreBuilder AddSqlServer<TDbContext>(
         this IEventStoreBuilder builder,
         string dataProviderName,
@@ -86,6 +104,13 @@ public static class SqlServerEventStoreBuilderExtensions
         return builder.AddSqlServer<TDbContext>(dataProviderName, (_, o) => configureOptions(o), lifetime);
     }
 
+    /// <summary>
+    /// Registers the SQL server based event store for the data provider.
+    /// </summary>
+    /// <param name="builder">The <see cref="DbContextDataProviderBuilder{TDbContext}"/>.</param>
+    /// <param name="configureOptions">Delegate used to configure the SQL server event store.</param>
+    /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
+    /// <returns>The <see cref="DbContextDataProviderBuilder{TDbContext}"/> which allows chaining of method calls.</returns>
     public static DbContextDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
         this DbContextDataProviderBuilder<TDbContext> builder,
         Action<IServiceProvider, SqlServerEventStoreOptions>? configureOptions = null)
@@ -97,6 +122,13 @@ public static class SqlServerEventStoreBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Registers the SQL server based event store for the data provider.
+    /// </summary>
+    /// <param name="builder">The <see cref="DbContextDataProviderBuilder{TDbContext}"/>.</param>
+    /// <param name="configureOptions">Delegate used to configure the SQL server event store.</param>
+    /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
+    /// <returns>The <see cref="DbContextDataProviderBuilder{TDbContext}"/> which allows chaining of method calls.</returns>
     public static DbContextDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
         this DbContextDataProviderBuilder<TDbContext> builder,
         Action<SqlServerEventStoreOptions> configureOptions)
