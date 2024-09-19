@@ -102,7 +102,7 @@ public sealed class SubscriptionService : BackgroundService
 
             await using (transaction)
             {
-                watchResult = await subscriptionStore.WatchAsync(TimeSpan.FromMinutes(1), cancellationToken)
+                watchResult = await subscriptionStore.WatchAsync(TimeSpan.FromSeconds(10), cancellationToken)
                                                      .ConfigureAwait(false);
 
                 if (watchResult == null)
