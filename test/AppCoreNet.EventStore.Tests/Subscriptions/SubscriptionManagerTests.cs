@@ -80,6 +80,21 @@ public sealed class SubscriptionManagerTests : IDisposable
     }
 
     [Fact]
+    public async Task ResubscribeUpdatesSubscription()
+    {
+        SubscriptionManager manager = CreateSubscriptionManager();
+
+        var subscriptionId = SubscriptionId.NewId();
+        StreamId streamId = StreamId.All;
+
+        await manager.SubscribeAsync(subscriptionId, streamId, _ => Listener);
+        await manager.ResubscribeAsync(subscriptionId);
+
+        await Store.Received(1)
+                   .UpdateAsync(subscriptionId, StreamPosition.Start.Value, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task InitializesSubscriptionsFromOptions()
     {
         var subscriptionId1 = SubscriptionId.NewId();

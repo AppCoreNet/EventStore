@@ -132,6 +132,28 @@ public sealed class SubscriptionManager : ISubscriptionManager
         _subscriptions.TryRemove(subscriptionId, out _);
     }
 
+    /// <inheritdoc />
+    public async Task ResubscribeAsync(SubscriptionId subscriptionId, CancellationToken cancellationToken = default)
+    {
+        Ensure.Arg.NotNull(subscriptionId);
+        Ensure.Arg.NotWildcard(subscriptionId);
+
+        if (!_subscriptions.TryGetValue(subscriptionId, out _))
+        {
+            throw new InvalidOperationException($"Subscription with ID '{subscriptionId}' does not exist.");
+        }
+
+        AsyncServiceScope serviceScope = _serviceScopeFactory.CreateAsyncScope();
+        IServiceProvider serviceProvider = serviceScope.ServiceProvider;
+
+        await using (serviceScope.ConfigureAwait(false))
+        {
+            var store = serviceProvider.GetRequiredService<ISubscriptionStore>();
+            await store.UpdateAsync(subscriptionId, StreamPosition.Start.Value, cancellationToken)
+                       .ConfigureAwait(false);
+        }
+    }
+
     /// <summary>
     /// Creates the listener for the specified subscription.
     /// </summary>

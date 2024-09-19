@@ -33,4 +33,12 @@ public interface ISubscriptionManager
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task UnsubscribeAsync(SubscriptionId subscriptionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Restarts the subscription re-playing all events.
+    /// </summary>
+    /// <param name="subscriptionId">The ID of the subscription.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task ResubscribeAsync(SubscriptionId subscriptionId, CancellationToken cancellationToken = default);
 }
