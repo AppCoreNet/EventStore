@@ -139,6 +139,30 @@ public sealed class SubscriptionService : BackgroundService
                     }
                 }
 
+                try
+                {
+                    await listener
+                        .HandleAsync(
+                            watchResult.SubscriptionId,
+                            new EventEnvelope(new EventTransactionCommittingEvent()),
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error completing event transaction. This action will be retried.");
+
+                    if (transaction != null)
+                    {
+                        await transaction.RollbackAsync()
+                                         .ConfigureAwait(false);
+                        await transaction.DisposeAsync()
+                                         .ConfigureAwait(false);
+                    }
+
+                    continue;
+                }
+
                 await subscriptionStore.UpdateAsync(watchResult.SubscriptionId, lastPosition, cancellationToken)
                                        .ConfigureAwait(false);
 
