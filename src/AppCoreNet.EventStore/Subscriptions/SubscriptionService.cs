@@ -141,10 +141,12 @@ public sealed class SubscriptionService : BackgroundService
 
                 try
                 {
-                    await listener.HandleAsync(
-                        watchResult.SubscriptionId,
-                        new EventEnvelope(new EventTransactionCommittingEvent()),
-                        cancellationToken);
+                    await listener
+                        .HandleAsync(
+                            watchResult.SubscriptionId,
+                            new EventEnvelope(new EventTransactionCommittingEvent()),
+                            cancellationToken)
+                        .ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
