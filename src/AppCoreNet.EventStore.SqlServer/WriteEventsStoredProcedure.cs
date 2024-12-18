@@ -1,4 +1,4 @@
-﻿// Licensed under the MIT license.
+// Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
 using System;
@@ -23,6 +23,8 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
     required public long ExpectedPosition { get; init; }
 
     required public IEnumerable<object> Events { get; init; }
+
+    required public string LockResource { get; init; }
 
     public WriteEventsSqlStoredProcedure(DbContext dbContext, string? schema, IEventStoreSerializer serializer)
         : base(dbContext, $"[{SchemaUtils.GetEventStoreSchema(schema)}].{ProcedureName}")
@@ -51,15 +53,20 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
              CREATE PROCEDURE [{schema}].{ProcedureName} (
                  @{nameof(StreamId)} NVARCHAR({Constants.StreamIdMaxLength}),
                  @{nameof(ExpectedPosition)} BIGINT,
-                 @{nameof(Events)} [{schema}].[{nameof(Model.EventTableType)}] READONLY
+                 @{nameof(Events)} [{schema}].[{nameof(Model.EventTableType)}] READONLY,
+                 @{nameof(LockResource)} NVARCHAR(max)
                  )
              AS
              BEGIN
                  DECLARE @StreamKey AS INT;
                  DECLARE @StreamSequence AS BIGINT;
                  DECLARE @StreamIndex AS BIGINT;
+                 DECLARE @LockResult AS INT;
 
                  IF @{nameof(StreamId)} is NULL RAISERROR('The value for parameter ''{nameof(StreamId)}'' must not be NULL', 16, 1)
+
+                 EXEC @LockResult = sp_getapplock @Resource = @{nameof(LockResource)}, @LockMode = 'Exclusive';
+                 IF @LockResult < 0 RAISERROR('Event write lock could not be acquired', 16, 1)
 
                  SELECT
                     @StreamKey = Id,
@@ -192,6 +199,7 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
                 TypeName = $"[{_schema}].[{nameof(Model.EventTableType)}]",
                 Value = CreateEventDataTable(),
             },
+            new SqlParameter($"@{nameof(LockResource)}", LockResource)
         ];
     }
 }
