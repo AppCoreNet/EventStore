@@ -1,4 +1,4 @@
-﻿// Licensed under the MIT license.
+// Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
 using System;
@@ -62,6 +62,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
             StreamId = streamId,
             ExpectedPosition = state.Value,
             Events = events,
+            LockResource = _options.ApplicationName + "-WriteEvents",
         };
 
         Model.WriteEventsResult result =
