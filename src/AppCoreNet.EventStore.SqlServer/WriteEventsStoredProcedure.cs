@@ -134,7 +134,8 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
                         [{nameof(Model.EventTableType.Data)}],
                         [{nameof(Model.EventTableType.Metadata)}]
                     FROM
-                        @{nameof(Events)};
+                        @{nameof(Events)}
+                    ORDER BY [{nameof(Model.EventTableType.Offset)}];
 
                  SET @StreamIndex = @StreamIndex + @@ROWCOUNT;
                  SET @StreamSequence = SCOPE_IDENTITY();
