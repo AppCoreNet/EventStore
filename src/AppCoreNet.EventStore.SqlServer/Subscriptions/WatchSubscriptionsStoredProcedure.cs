@@ -1,4 +1,4 @@
-﻿// Licensed under the MIT license.
+// Licensed under the MIT license.
 // Copyright (c) The AppCore .NET project.
 
 using System;
@@ -97,9 +97,9 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
                                 IF @{nameof(Timeout)} <= 0 BREAK;
                             END
                         END
-                    END
 
-                    EXEC sp_releaseapplock @Resource = @{nameof(LockResource)}
+                        EXEC sp_releaseapplock @Resource = @{nameof(LockResource)}
+                    END
 
                     SELECT
                         @Id AS [{nameof(Model.WatchSubscriptionsResult.Id)}],
