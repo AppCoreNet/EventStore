@@ -13,11 +13,11 @@ internal sealed class WatchSubscriptionsStoredProcedure : SqlStoredProcedure<Mod
 {
     private const string ProcedureName = "WatchSubscriptions";
 
-    required public TimeSpan PollInterval { get; init; }
+    public required TimeSpan PollInterval { get; init; }
 
-    required public TimeSpan Timeout { get; init; }
+    public required TimeSpan Timeout { get; init; }
 
-    required public string LockResource { get; init; }
+    public required string LockResource { get; init; }
 
     public WatchSubscriptionsStoredProcedure(DbContext dbContext, string? schema)
         : base(dbContext, $"[{SchemaUtils.GetEventStoreSchema(schema)}].{ProcedureName}")

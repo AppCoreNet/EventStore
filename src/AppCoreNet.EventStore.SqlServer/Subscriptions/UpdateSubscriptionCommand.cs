@@ -11,9 +11,9 @@ internal sealed class UpdateSubscriptionCommand : SqlTextCommand
 {
     private readonly string _schema;
 
-    required public SubscriptionId SubscriptionId { get; init; }
+    public required SubscriptionId SubscriptionId { get; init; }
 
-    required public long Position { get; init; }
+    public required long Position { get; init; }
 
     public UpdateSubscriptionCommand(DbContext dbContext, string? schema)
         : base(dbContext)

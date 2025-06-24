@@ -11,7 +11,7 @@ internal sealed class DeleteStreamCommand : SqlTextCommand
 {
     private readonly string _schema;
 
-    required public StreamId StreamId { get; init; }
+    public required StreamId StreamId { get; init; }
 
     public DeleteStreamCommand(DbContext dbContext, string? schema)
         : base(dbContext)

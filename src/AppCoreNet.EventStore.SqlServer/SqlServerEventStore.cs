@@ -57,7 +57,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
         Ensure.Arg.NotWildcard(streamId);
         Ensure.Arg.NotNull(events);
 
-        var procedure = new WriteEventsSqlStoredProcedure(_dbContext, _options.SchemaName, _serializer)
+        var procedure = new WriteEventsStoredProcedure(_dbContext, _options.SchemaName, _serializer)
         {
             StreamId = streamId,
             ExpectedPosition = state.Value,
@@ -113,7 +113,7 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
             result.Add(
                 new EventEnvelope(
                     e.EventType,
-                    _serializer.Deserialize(e.EventType, e.Data) !,
+                    _serializer.Deserialize(e.EventType, e.Data)!,
                     new EventMetadata
                     {
                         Index = e.Index,

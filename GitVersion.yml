@@ -1,12 +1,13 @@
+workflow: GitFlow/v1
+mode: ContinuousDelivery
 assembly-versioning-scheme: Major
 assembly-file-versioning-scheme: MajorMinorPatchTag
 assembly-informational-format: '{SemVer}+{ShortSha}'
-continuous-delivery-fallback-tag: 'alpha'
-mode: 'ContinuousDeployment'
 branches:
   main:
+    label: alpha
     increment: Minor
+  support:
+    label: alpha
   pull-request:
-    tag: 'pr'
-ignore:
-  sha: []
+    label: pr

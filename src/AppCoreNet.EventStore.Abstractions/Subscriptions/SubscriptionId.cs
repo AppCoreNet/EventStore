@@ -18,7 +18,7 @@ public sealed class SubscriptionId : IEquatable<SubscriptionId>
     /// <summary>
     /// Gets the special ID which refers to all existing subscriptions.
     /// </summary>
-    public static readonly SubscriptionId All = new ("*");
+    public static readonly SubscriptionId All = new("*");
 
     /// <summary>
     /// Gets the ID value.
@@ -68,7 +68,7 @@ public sealed class SubscriptionId : IEquatable<SubscriptionId>
     public static SubscriptionId Prefix(string prefix)
     {
         Ensure.Arg.NotEmpty(prefix);
-        return new ($"{prefix}*");
+        return new($"{prefix}*");
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public sealed class SubscriptionId : IEquatable<SubscriptionId>
     public static SubscriptionId Suffix(string suffix)
     {
         Ensure.Arg.NotEmpty(suffix);
-        return new ($"*{suffix}");
+        return new($"*{suffix}");
     }
 
     /// <summary>
@@ -155,5 +155,5 @@ public sealed class SubscriptionId : IEquatable<SubscriptionId>
     /// </summary>
     /// <param name="id">The value.</param>
     /// <returns>The <see cref="SubscriptionId"/>.</returns>
-    public static implicit operator SubscriptionId(string id) => new (id);
+    public static implicit operator SubscriptionId(string id) => new(id);
 }

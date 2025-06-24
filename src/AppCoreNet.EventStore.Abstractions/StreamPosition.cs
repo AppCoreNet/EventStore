@@ -18,12 +18,12 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
     /// <summary>
     /// Specifies to read from the start of the stream.
     /// </summary>
-    public static readonly StreamPosition Start = new (StartValue);
+    public static readonly StreamPosition Start = new(StartValue);
 
     /// <summary>
     /// Specifies to read from the end of the stream.
     /// </summary>
-    public static readonly StreamPosition End = new (EndValue);
+    public static readonly StreamPosition End = new(EndValue);
 
     /// <summary>
     /// Gets the value.
@@ -71,7 +71,7 @@ public readonly struct StreamPosition : IFormattable, IEquatable<StreamPosition>
     }
 
     /// <inheritdoc />
-    public string ToString(string? format, IFormatProvider formatProvider)
+    public string ToString(string? format, IFormatProvider? formatProvider)
     {
         switch (Value)
         {

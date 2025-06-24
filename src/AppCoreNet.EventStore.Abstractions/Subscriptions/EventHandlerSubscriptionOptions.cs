@@ -15,7 +15,7 @@ namespace AppCoreNet.EventStore.Subscriptions;
 /// </summary>
 public sealed class EventHandlerSubscriptionOptions
 {
-    internal List<Func<IServiceProvider, IEventHandler>> EventHandlerFactories { get; } = new ();
+    internal List<Func<IServiceProvider, IEventHandler>> EventHandlerFactories { get; } = new();
 
     /// <summary>
     /// Adds the specified factory to create an <see cref="IEventHandler"/>.

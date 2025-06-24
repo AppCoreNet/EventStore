@@ -13,9 +13,9 @@ namespace AppCoreNet.EventStore.Subscriptions;
 /// </summary>
 public sealed class SubscriptionOptions
 {
-    private readonly Dictionary<SubscriptionId, Subscriber> _subscribers = new ();
+    private readonly Dictionary<SubscriptionId, Subscriber> _subscribers = new();
 
-    internal Dictionary<SubscriptionId, EventHandlerSubscriptionOptions> EventHandlerOptions { get; } = new ();
+    internal Dictionary<SubscriptionId, EventHandlerSubscriptionOptions> EventHandlerOptions { get; } = new();
 
     /// <summary>
     /// Gets or sets the batch size when processing event subscriptions.
@@ -105,7 +105,7 @@ public sealed class SubscriptionOptions
         Ensure.Arg.NotNull(subscriptionId);
         Ensure.Arg.NotNull(configure);
 
-        if (_subscribers.TryGetValue(subscriptionId, out Subscriber subscriber))
+        if (_subscribers.TryGetValue(subscriptionId, out Subscriber? subscriber))
         {
             if (subscriber.StreamId != streamId)
                 throw new InvalidOperationException();
