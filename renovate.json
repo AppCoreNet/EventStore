@@ -2,5 +2,25 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "groupName": "AppCoreNet.Shared",
+      "matchSourceUrls": [
+        "https://github.com/AppCoreNet/Shared"
+      ]
+    },
+    {
+      "groupName": "AppCoreNet.Extensions",
+      "matchSourceUrls": [
+        "https://github.com/AppCoreNet/Extensions"
+      ]
+    },
+    {
+      "groupName": "AppCoreNet.Data",
+      "matchSourceUrls": [
+        "https://github.com/AppCoreNet/Data"
+      ]
+    }
   ]
 }
