@@ -206,6 +206,50 @@ public abstract class EventStoreTests : IAsyncLifetime
                        .Excluding(e => e.Metadata.Sequence));
     }
 
+    [Theory]
+    [InlineData("*", 4)]
+    [InlineData("test-*", 2)]
+    [InlineData("*-test", 2)]
+    public async Task ReadsEventsFromWildcardStreamStartForward(string streamId, int expectedCount)
+    {
+        await using ServiceProvider sp = CreateServiceProvider();
+        await using AsyncServiceScope scope = sp.CreateAsyncScope();
+
+        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
+
+        StreamId streamId1 = $"test-{Guid.NewGuid():N}";
+        StreamId streamId2 = $"{Guid.NewGuid():N}-test";
+
+        var events = new[]
+        {
+            new EventEnvelope("TestCreated", "name"),
+            new EventEnvelope("TestRenamed", "new_name"),
+            new EventEnvelope("TestRenamed", "new_name_2"),
+        };
+
+        await eventStore.WriteAsync(streamId1, events, StreamState.None);
+        await eventStore.WriteAsync(streamId2, events, StreamState.None);
+
+        await eventStore.ReadAsync("$streams", StreamPosition.Start, StreamReadDirection.Forward);
+
+        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
+            streamId,
+            StreamPosition.Start,
+            StreamReadDirection.Forward,
+            int.MaxValue);
+
+        result.Should()
+              .HaveCount(expectedCount);
+
+        result.Should()
+              .BeEquivalentTo(
+                  new[] { events[0], events[1] },
+                  o =>
+                      o.Excluding(e => e.Metadata.CreatedAt)
+                       .Excluding(e => e.Metadata.Index)
+                       .Excluding(e => e.Metadata.Sequence));
+    }
+
     [Fact]
     public async Task ReadsEventsFromStreamEndForward()
     {

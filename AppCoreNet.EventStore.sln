@@ -39,6 +39,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppCoreNet.EventStore.Speci
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppCoreNet.EventStore.Tests", "test\AppCoreNet.EventStore.Tests\AppCoreNet.EventStore.Tests.csproj", "{33AD7775-58A9-461C-8970-948445171AEB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{945C7FBC-AF01-47C7-9BDA-3483265343DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing_SqlServer", "samples\EventSourcing_SqlServer\EventSourcing_SqlServer.csproj", "{F46F1644-6905-4F77-A425-30A4821104B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppCoreNet.EventStore.EventStoreDb", "src\AppCoreNet.EventStore.EventStoreDb\AppCoreNet.EventStore.EventStoreDb.csproj", "{1F36A5AA-1EFB-475D-A337-4C350A34942C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppCoreNet.EventStore.EventStoreDb.Tests", "test\AppCoreNet.EventStore.EventStoreDb.Tests\AppCoreNet.EventStore.EventStoreDb.Tests.csproj", "{CD4F9D44-51E0-4B60-B7EC-1CB6E589B178}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +59,9 @@ Global
 		{453D2429-45E7-448D-9B4F-94B584E2CEA0} = {9E85A2A1-38E1-4B4F-B32B-06E7856B5C52}
 		{8D325051-15EE-4014-88A5-0144F1BE3F4F} = {03CCC0AE-2D60-4CE9-B9B6-BFE672FF5744}
 		{33AD7775-58A9-461C-8970-948445171AEB} = {03CCC0AE-2D60-4CE9-B9B6-BFE672FF5744}
+		{F46F1644-6905-4F77-A425-30A4821104B8} = {945C7FBC-AF01-47C7-9BDA-3483265343DF}
+		{1F36A5AA-1EFB-475D-A337-4C350A34942C} = {9E85A2A1-38E1-4B4F-B32B-06E7856B5C52}
+		{CD4F9D44-51E0-4B60-B7EC-1CB6E589B178} = {03CCC0AE-2D60-4CE9-B9B6-BFE672FF5744}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{84994A79-CFC8-4A50-9192-46379C29B0FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -77,5 +88,17 @@ Global
 		{33AD7775-58A9-461C-8970-948445171AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33AD7775-58A9-461C-8970-948445171AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33AD7775-58A9-461C-8970-948445171AEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F46F1644-6905-4F77-A425-30A4821104B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F46F1644-6905-4F77-A425-30A4821104B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F46F1644-6905-4F77-A425-30A4821104B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F46F1644-6905-4F77-A425-30A4821104B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F36A5AA-1EFB-475D-A337-4C350A34942C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F36A5AA-1EFB-475D-A337-4C350A34942C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F36A5AA-1EFB-475D-A337-4C350A34942C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F36A5AA-1EFB-475D-A337-4C350A34942C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD4F9D44-51E0-4B60-B7EC-1CB6E589B178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD4F9D44-51E0-4B60-B7EC-1CB6E589B178}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD4F9D44-51E0-4B60-B7EC-1CB6E589B178}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD4F9D44-51E0-4B60-B7EC-1CB6E589B178}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

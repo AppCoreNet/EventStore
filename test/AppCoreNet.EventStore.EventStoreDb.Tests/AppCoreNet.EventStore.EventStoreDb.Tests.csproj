@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Unix'">$(TargetFrameworks);net48</TargetFrameworks>
+    <RootNamespace>AppCoreNet.EventStore.EventStoreDb</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AppCoreNet.EventStore.EventStoreDb\AppCoreNet.EventStore.EventStoreDb.csproj" />
+    <ProjectReference Include="..\AppCoreNet.EventStore.SpecificationTests\AppCoreNet.EventStore.SpecificationTests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.EventStoreDb" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>

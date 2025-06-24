@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0;net48</TargetFrameworks>
+    <Description>Provides public API for the AppCore .NET event store.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EventStore.Client.Grpc.Streams" Version="23.3.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AppCoreNet.EventStore\AppCoreNet.EventStore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\Ensure.cs">
+      <Link>Ensure.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>

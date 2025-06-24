@@ -15,6 +15,9 @@ public class JsonEventStoreSerializer : IEventStoreSerializer
 {
     private readonly JsonEventStoreSerializerOptions _options;
 
+    /// <inheritdoc />
+    public string ContentType => "application/json";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="JsonEventStoreSerializer"/> class.
     /// </summary>

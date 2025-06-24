@@ -9,6 +9,11 @@ namespace AppCoreNet.EventStore.Serialization;
 public interface IEventStoreSerializer
 {
     /// <summary>
+    /// Gets the content type of the serialization format.
+    /// </summary>
+    string ContentType { get; }
+
+    /// <summary>
     /// Serializes the specified object.
     /// </summary>
     /// <param name="obj">The object to serialize.</param>
