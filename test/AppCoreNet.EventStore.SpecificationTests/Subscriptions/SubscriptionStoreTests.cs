@@ -209,7 +209,10 @@ public abstract class SubscriptionStoreTests : IAsyncLifetime
         await subscriptionStore.UpdateAsync(subscriptionId, events.Last().Metadata.Sequence);
 
         if (transaction != null)
+        {
             await transaction.CommitAsync();
+            await transaction.DisposeAsync();
+        }
 
         await using ITransaction? transaction2 = subscriptionStore is ITransactionalStore transactionalStore2
             ? await transactionalStore2.BeginTransactionAsync()

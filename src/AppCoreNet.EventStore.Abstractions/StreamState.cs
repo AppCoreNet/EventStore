@@ -20,12 +20,12 @@ public readonly struct StreamState : IFormattable, IEquatable<StreamState>
     /// <summary>
     /// Specifies that the stream can be at any position.
     /// </summary>
-    public static readonly StreamState Any = new (AnyValue);
+    public static readonly StreamState Any = new(AnyValue);
 
     /// <summary>
     /// Specifies that the stream should not exist.
     /// </summary>
-    public static readonly StreamState None = new (NoneValue);
+    public static readonly StreamState None = new(NoneValue);
 
     /// <summary>
     /// Gets the value.
@@ -76,7 +76,7 @@ public readonly struct StreamState : IFormattable, IEquatable<StreamState>
     }
 
     /// <inheritdoc />
-    public string ToString(string? format, IFormatProvider formatProvider)
+    public string ToString(string? format, IFormatProvider? formatProvider)
     {
         switch (Value)
         {

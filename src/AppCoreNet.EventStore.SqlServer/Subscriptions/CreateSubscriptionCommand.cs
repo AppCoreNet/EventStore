@@ -11,9 +11,9 @@ internal sealed class CreateSubscriptionCommand : SqlTextCommand
 {
     private readonly string _schema;
 
-    required public SubscriptionId SubscriptionId { get; init; }
+    public required SubscriptionId SubscriptionId { get; init; }
 
-    required public StreamId StreamId { get; init; }
+    public required StreamId StreamId { get; init; }
 
     public bool FailIfExists { get; init; }
 

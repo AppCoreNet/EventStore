@@ -1,24 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net6.0;netstandard2.0;net462</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <Description>Provides public API for the AppCore .NET event store.</Description>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <PackageReference Include="AppCoreNet.Data.EntityFrameworkCore" Version="0.5.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net462' OR '$(TargetFramework)'=='netstandard2.0'">
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[3.1.32,4.0.0)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[6.0.26,9.0.0)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[8.0.1,9.0.0)" />
+    <PackageReference Include="AppCoreNet.Data.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
   </ItemGroup>
 
   <ItemGroup>

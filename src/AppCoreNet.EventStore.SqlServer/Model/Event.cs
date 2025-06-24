@@ -13,13 +13,13 @@ internal sealed class Event
 
     public EventStream? EventStream { get; init; }
 
-    required public string EventType { get; init; }
+    public required string EventType { get; init; }
 
     public DateTimeOffset? CreatedAt { get; init; }
 
     public long Index { get; init; }
 
-    required public string Data { get; init; }
+    public required string Data { get; init; }
 
     public string? Metadata { get; init; }
 }

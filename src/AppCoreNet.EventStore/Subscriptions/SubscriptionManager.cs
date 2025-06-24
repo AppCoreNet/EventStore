@@ -18,11 +18,11 @@ public sealed class SubscriptionManager : ISubscriptionManager
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly SubscriptionOptions _options;
-    private readonly ConcurrentDictionary<SubscriptionId, Subscriber> _subscriptions = new ();
+    private readonly ConcurrentDictionary<SubscriptionId, Subscriber> _subscriptions = new();
 
     private sealed class NoOpListener : ISubscriptionListener
     {
-        public static readonly NoOpListener Instance = new ();
+        public static readonly NoOpListener Instance = new();
 
         public Task HandleAsync(
             SubscriptionId subscriptionId,

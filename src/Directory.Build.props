@@ -6,13 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AppCoreNet.Diagnostics.Sources" Version="0.5.2">
+    <PackageReference Include="AppCoreNet.Diagnostics.Sources">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="AppCoreNet.TypeHelpers.Sources" Version="0.5.2">
+    <PackageReference Include="AppCoreNet.TypeHelpers.Sources">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0">
+    <PackageReference Include="JetBrains.Annotations">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

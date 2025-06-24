@@ -12,13 +12,13 @@ namespace AppCoreNet.EventStore.SqlServer;
 
 internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.Event>>
 {
-    required public StreamId StreamId { get; init; }
+    public required StreamId StreamId { get; init; }
 
-    required public StreamPosition Position { get; init; }
+    public required StreamPosition Position { get; init; }
 
-    required public StreamReadDirection Direction { get; init; }
+    public required StreamReadDirection Direction { get; init; }
 
-    required public int MaxCount { get; init; }
+    public required int MaxCount { get; init; }
 
     public ReadEventsCommand(DbContext dbContext)
         : base(dbContext)

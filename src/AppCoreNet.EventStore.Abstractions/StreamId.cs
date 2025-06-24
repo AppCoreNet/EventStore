@@ -18,7 +18,7 @@ public sealed class StreamId : IEquatable<StreamId>
     /// <summary>
     /// Gets the special ID which refers to all existing streams.
     /// </summary>
-    public static readonly StreamId All = new ("*");
+    public static readonly StreamId All = new("*");
 
     /// <summary>
     /// Gets the ID value.
@@ -68,7 +68,7 @@ public sealed class StreamId : IEquatable<StreamId>
     public static StreamId Prefix(string prefix)
     {
         Ensure.Arg.NotEmpty(prefix);
-        return new ($"{prefix}*");
+        return new($"{prefix}*");
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public sealed class StreamId : IEquatable<StreamId>
     public static StreamId Suffix(string suffix)
     {
         Ensure.Arg.NotEmpty(suffix);
-        return new ($"*{suffix}");
+        return new($"*{suffix}");
     }
 
     /// <summary>
@@ -146,5 +146,5 @@ public sealed class StreamId : IEquatable<StreamId>
     /// </summary>
     /// <param name="id">The value.</param>
     /// <returns>The <see cref="StreamId"/>.</returns>
-    public static implicit operator StreamId(string id) => new (id);
+    public static implicit operator StreamId(string id) => new(id);
 }

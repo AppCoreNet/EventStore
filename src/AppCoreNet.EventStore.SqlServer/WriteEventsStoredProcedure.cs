@@ -11,22 +11,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AppCoreNet.EventStore.SqlServer;
 
-internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.WriteEventsResult>
+internal sealed class WriteEventsStoredProcedure : SqlStoredProcedure<Model.WriteEventsResult>
 {
     private const string ProcedureName = "WriteEvents";
 
     private readonly string? _schema;
     private readonly IEventStoreSerializer _serializer;
 
-    required public StreamId StreamId { get; init; }
+    public required StreamId StreamId { get; init; }
 
-    required public long ExpectedPosition { get; init; }
+    public required long ExpectedPosition { get; init; }
 
-    required public IEnumerable<object> Events { get; init; }
+    public required IEnumerable<object> Events { get; init; }
 
-    required public string LockResource { get; init; }
+    public required string LockResource { get; init; }
 
-    public WriteEventsSqlStoredProcedure(DbContext dbContext, string? schema, IEventStoreSerializer serializer)
+    public WriteEventsStoredProcedure(DbContext dbContext, string? schema, IEventStoreSerializer serializer)
         : base(dbContext, $"[{SchemaUtils.GetEventStoreSchema(schema)}].{ProcedureName}")
     {
         _schema = schema;
@@ -171,18 +171,21 @@ internal sealed class WriteEventsSqlStoredProcedure : SqlStoredProcedure<Model.W
         dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.Data), typeof(string)));
         dataTable.Columns.Add(new DataColumn(nameof(Model.EventTableType.Metadata), typeof(string)));
 
-        IEnumerable<(EventEnvelope, int index)> eventEnvelopes = Events.Select(
-            (e, index) => (e as EventEnvelope ?? new EventEnvelope(e), index));
+        IEnumerable<(EventEnvelope Envelope, int Index)> eventEnvelopes = Events.Select(
+            (e, index) => (e as EventEnvelope ?? new EventEnvelope(e), Index: index));
 
-        foreach ((EventEnvelope @event, int index) in eventEnvelopes)
+        foreach ((EventEnvelope Envelope, int Index) eventEnvelopeWithIndex in eventEnvelopes)
         {
+            EventEnvelope envelope = eventEnvelopeWithIndex.Envelope;
+            int index = eventEnvelopeWithIndex.Index;
+
             dataTable.Rows.Add(
             [
-                @event.EventTypeName,
-                @event.Metadata.CreatedAt,
+                envelope.EventTypeName,
+                envelope.Metadata.CreatedAt,
                 index,
-                _serializer.Serialize(@event.Data),
-                _serializer.Serialize(@event.Metadata.Data),
+                _serializer.Serialize(envelope.Data),
+                _serializer.Serialize(envelope.Metadata.Data),
             ]);
         }
 

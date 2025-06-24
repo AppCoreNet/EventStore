@@ -15,12 +15,12 @@ internal sealed class EventSubscription
     /// <summary>
     /// Gets the ID of the subscription.
     /// </summary>
-    required public string SubscriptionId { get; init; }
+    public required string SubscriptionId { get; init; }
 
     /// <summary>
     /// Gets the ID of the stream.
     /// </summary>
-    required public string StreamId { get; init; }
+    public required string StreamId { get; init; }
 
     /// <summary>
     /// Gets the date and time when the subscription was created.

@@ -12,7 +12,7 @@ internal sealed class DeleteSubscriptionCommand : SqlTextCommand
 {
     private readonly string _schema;
 
-    required public SubscriptionId SubscriptionId { get; init; }
+    public required SubscriptionId SubscriptionId { get; init; }
 
     public DeleteSubscriptionCommand(DbContext dbContext, string? schema)
         : base(dbContext)

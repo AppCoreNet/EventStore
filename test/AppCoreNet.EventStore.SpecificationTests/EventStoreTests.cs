@@ -36,14 +36,14 @@ public abstract class EventStoreTests : IAsyncLifetime
     {
         -2 => StreamState.Any,
         -1 => StreamState.None,
-        _ => StreamState.Index(value)
+        _ => StreamState.Index(value),
     };
 
     private static StreamPosition CreateStreamPosition(long value) => value switch
     {
         -2 => StreamPosition.End,
         -1 => StreamPosition.Start,
-        _ => StreamPosition.FromValue(value)
+        _ => StreamPosition.FromValue(value),
     };
 
     async Task IAsyncLifetime.InitializeAsync()
@@ -422,7 +422,7 @@ public abstract class EventStoreTests : IAsyncLifetime
         var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
 
         TimeSpan timeout = TimeSpan.FromSeconds(1);
-        Stopwatch watch = new ();
+        Stopwatch watch = new();
         watch.Start();
 
         WatchEventResult? result = await eventStore.WatchAsync("$all", StreamPosition.Start, timeout);

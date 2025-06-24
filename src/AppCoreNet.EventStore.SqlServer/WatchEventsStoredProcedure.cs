@@ -13,13 +13,13 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
 {
     private const string ProcedureName = "WatchEvents";
 
-    required public StreamId StreamId { get; init; }
+    public required StreamId StreamId { get; init; }
 
-    required public StreamPosition FromPosition { get; init; }
+    public required StreamPosition FromPosition { get; init; }
 
-    required public TimeSpan PollInterval { get; init; }
+    public required TimeSpan PollInterval { get; init; }
 
-    required public TimeSpan Timeout { get; init; }
+    public required TimeSpan Timeout { get; init; }
 
     public WatchEventsStoredProcedure(DbContext dbContext, string? schema)
         : base(dbContext, $"[{SchemaUtils.GetEventStoreSchema(schema)}].{ProcedureName}")

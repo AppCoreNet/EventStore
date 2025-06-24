@@ -26,7 +26,7 @@ public static class MigrationBuilderExtensions
     {
         Ensure.Arg.NotNull(builder);
 
-        foreach (string script in WriteEventsSqlStoredProcedure.GetCreateScripts(schema))
+        foreach (string script in WriteEventsStoredProcedure.GetCreateScripts(schema))
         {
             builder.ExecuteSql(script);
         }
@@ -44,7 +44,7 @@ public static class MigrationBuilderExtensions
     {
         Ensure.Arg.NotNull(builder);
 
-        foreach (string script in WriteEventsSqlStoredProcedure.GetDropScripts(schema))
+        foreach (string script in WriteEventsStoredProcedure.GetDropScripts(schema))
         {
             builder.ExecuteSql(script);
         }
