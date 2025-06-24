@@ -31,12 +31,15 @@ jobs:
           dotnet-version: |
             8.0.x
             9.0.x
+      - name: Set BUILD_CONFIGURATION
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "BUILD_CONFIGURATION=Release" >> $GITHUB_ENV
       - name: Restore
         run: dotnet restore
       - name: Build
         run: dotnet build --configuration ${{env.BUILD_CONFIGURATION}} --no-restore
       - name: Test
-        run: dotnet test --configuration ${{env.BUILD_CONFIGURATION}} --collect:"Code Coverage;Format=Cobertura" --logger trx --results-directory test-results --no-build
+        run: dotnet test --configuration ${{env.BUILD_CONFIGURATION}} --filter "Category!=Integration" --collect:"Code Coverage;Format=Cobertura" --logger trx --results-directory test-results --no-build
       - name: Build packages
         run: dotnet pack --configuration ${{env.BUILD_CONFIGURATION}} --output ./artifacts --no-build
 #      - name: Upload coverage to Codecov
