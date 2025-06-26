@@ -34,7 +34,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.17" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.17" />
 
-    <PackageVersion Include="AppCoreNet.Extensions.DependencyInjection.Abstractions" Version="0.6.3" />
+    <PackageVersion Include="AppCoreNet.Extensions.DependencyInjection.Abstractions" Version="0.7.0" />
     <PackageVersion Include="AppCoreNet.Data.EntityFrameworkCore" Version="0.6.0" />
 
     <PackageVersion Include="Testcontainers.MsSql" Version="4.6.0" />
