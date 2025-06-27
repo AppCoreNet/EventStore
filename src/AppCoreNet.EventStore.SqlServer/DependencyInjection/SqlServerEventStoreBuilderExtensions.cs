@@ -107,12 +107,12 @@ public static class SqlServerEventStoreBuilderExtensions
     /// <summary>
     /// Registers the SQL server based event store for the data provider.
     /// </summary>
-    /// <param name="builder">The <see cref="DbContextDataProviderBuilder{TDbContext}"/>.</param>
+    /// <param name="builder">The <see cref="EntityFrameworkCoreDataProviderBuilder{TDbContext}"/>.</param>
     /// <param name="configureOptions">Delegate used to configure the SQL server event store.</param>
     /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
-    /// <returns>The <see cref="DbContextDataProviderBuilder{TDbContext}"/> which allows chaining of method calls.</returns>
-    public static DbContextDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
-        this DbContextDataProviderBuilder<TDbContext> builder,
+    /// <returns>The <see cref="EntityFrameworkCoreDataProviderBuilder{TDbContext}"/> which allows chaining of method calls.</returns>
+    public static EntityFrameworkCoreDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
+        this EntityFrameworkCoreDataProviderBuilder<TDbContext> builder,
         Action<IServiceProvider, SqlServerEventStoreOptions>? configureOptions = null)
         where TDbContext : DbContext
     {
@@ -125,12 +125,12 @@ public static class SqlServerEventStoreBuilderExtensions
     /// <summary>
     /// Registers the SQL server based event store for the data provider.
     /// </summary>
-    /// <param name="builder">The <see cref="DbContextDataProviderBuilder{TDbContext}"/>.</param>
+    /// <param name="builder">The <see cref="EntityFrameworkCoreDataProviderBuilder{TDbContext}"/>.</param>
     /// <param name="configureOptions">Delegate used to configure the SQL server event store.</param>
     /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
-    /// <returns>The <see cref="DbContextDataProviderBuilder{TDbContext}"/> which allows chaining of method calls.</returns>
-    public static DbContextDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
-        this DbContextDataProviderBuilder<TDbContext> builder,
+    /// <returns>The <see cref="EntityFrameworkCoreDataProviderBuilder{TDbContext}"/> which allows chaining of method calls.</returns>
+    public static EntityFrameworkCoreDataProviderBuilder<TDbContext> AddSqlServerEventStore<TDbContext>(
+        this EntityFrameworkCoreDataProviderBuilder<TDbContext> builder,
         Action<SqlServerEventStoreOptions> configureOptions)
         where TDbContext : DbContext
     {

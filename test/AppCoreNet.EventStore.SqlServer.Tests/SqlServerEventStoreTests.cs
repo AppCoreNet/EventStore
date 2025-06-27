@@ -38,7 +38,7 @@ public class SqlServerEventStoreTests : EventStoreTests
         services.AddDataProvider(
             p =>
             {
-                p.AddDbContext<TestDbContext>(
+                p.AddEntityFrameworkCore<TestDbContext>(
                      o =>
                      {
                          o.UseSqlServer(_sqlServerTestFixture.ConnectionString);
