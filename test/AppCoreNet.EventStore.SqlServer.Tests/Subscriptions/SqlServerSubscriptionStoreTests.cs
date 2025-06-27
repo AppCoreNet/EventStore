@@ -34,7 +34,7 @@ public class SqlServerSubscriptionStoreTests : SubscriptionStoreTests
         services.AddDataProvider(
             p =>
             {
-                p.AddDbContext<TestDbContext>(
+                p.AddEntityFrameworkCore<TestDbContext>(
                      o =>
                      {
                          o.UseSqlServer(_sqlServerTestFixture.ConnectionString);
