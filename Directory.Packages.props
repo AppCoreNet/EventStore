@@ -31,8 +31,8 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
 
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.18" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.18" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.19" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.19" />
 
     <PackageVersion Include="AppCoreNet.Extensions.DependencyInjection.Abstractions" Version="0.7.0" />
     <PackageVersion Include="AppCoreNet.Data.EntityFrameworkCore" Version="0.7.0" />
