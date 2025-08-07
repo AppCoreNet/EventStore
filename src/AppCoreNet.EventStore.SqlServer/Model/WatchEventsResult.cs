@@ -5,5 +5,7 @@ namespace AppCoreNet.EventStore.SqlServer.Model;
 
 internal sealed class WatchEventsResult
 {
+    public int ResultCode { get; set; }
+
     public long? Position { get; set; }
 }

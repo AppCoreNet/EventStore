@@ -56,7 +56,7 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
                     DECLARE @StreamPosition AS BIGINT;
                     DECLARE @WaitTime AS VARCHAR(12) = CONVERT(VARCHAR(12), DATEADD(ms, @{nameof(PollInterval)}, 0), 114);
 
-                    IF @{nameof(FromPosition)} = -2
+                    IF @{nameof(FromPosition)} = {StreamPosition.End.Value}
                     BEGIN
                         IF @{nameof(StreamId)} = '{Constants.StreamIdAll}'
                         BEGIN
@@ -70,7 +70,7 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
                                 FROM [{schema}].[{nameof(Model.EventStream)}]
                                 WHERE [{nameof(Model.EventStream.StreamId)}] = @{nameof(StreamId)};
                         END
-                        IF @{nameof(FromPosition)} IS NULL SET @{nameof(FromPosition)} = -1;
+                        IF @{nameof(FromPosition)} IS NULL SET @{nameof(FromPosition)} = {StreamPosition.Start.Value};
                     END
 
                     WHILE @StreamPosition IS NULL
@@ -97,7 +97,8 @@ internal sealed class WatchEventsStoredProcedure : SqlStoredProcedure<Model.Watc
                         END
                     END
 
-                    SELECT @StreamPosition AS [{nameof(Model.WatchEventsResult.Position)}];
+                    SELECT {WatchEventsResultCode.Success} AS [{nameof(Model.WatchEventsResult.ResultCode)}],
+                           @StreamPosition AS [{nameof(Model.WatchEventsResult.Position)}];
                 END
                 """;
     }

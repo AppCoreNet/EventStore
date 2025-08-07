@@ -92,6 +92,8 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
 
         if (StreamId.IsWildcard)
         {
+            dbSet = dbSet.Where(s => s.Deleted == 0);
+
             if (StreamId.IsPrefix)
             {
                 string streamIdPrefix = StreamId.Value.TrimEnd('*');
@@ -102,14 +104,7 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
                 string streamIdSuffix = StreamId.Value.TrimStart('*');
                 dbSet = dbSet.Where(s => s.StreamId.EndsWith(streamIdSuffix));
             }
-        }
-        else
-        {
-            dbSet = dbSet.Where(s => s.StreamId == StreamId.Value);
-        }
 
-        if (StreamId.IsWildcard)
-        {
             List<Model.Event> result =
                 await events.Join(
                                 dbSet,
@@ -123,11 +118,14 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
             return result;
         }
 
+        dbSet = dbSet.Where(s => s.StreamId == StreamId.Value);
+
         var streamEvents =
             await dbSet.Select(
                            s =>
                                new
                                {
+                                   Deleted = s.Deleted,
                                    Events = events.Where(e => e.EventStreamId == s.Id)
                                                   .Take(maxCount) // do not move Take() before Where()
                                                   .ToList(),
@@ -140,7 +138,12 @@ internal sealed class ReadEventsCommand : SqlCommand<IReadOnlyCollection<Model.E
             throw new StreamNotFoundException(StreamId.Value);
         }
 
-        return streamEvents.First()
-                           .Events;
+        var firstStream = streamEvents.First();
+        if (firstStream.Deleted != 0)
+        {
+            throw new StreamDeletedException(StreamId.Value);
+        }
+
+        return firstStream.Events;
     }
 }

@@ -107,7 +107,7 @@ jobs:
           name: artifacts
           path: ./artifacts
       - name: Push packages
-        run: dotnet nuget push -s ${{vars.MYGET_URL}} -k ${{secrets.MYGET_API_KEY}} ./artifacts/*.nupkg
+        run: dotnet nuget push --skip-duplicate -s ${{vars.MYGET_URL}} -k ${{secrets.MYGET_API_KEY}} ./artifacts/*.nupkg
 
   deploy-release:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -130,4 +130,4 @@ jobs:
           name: artifacts
           path: ./artifacts
       - name: Push packages
-        run: dotnet nuget push -s ${{vars.NUGET_URL}} -k ${{secrets.NUGET_API_KEY}} ./artifacts/*.nupkg
+        run: dotnet nuget push --skip-duplicate -s ${{vars.NUGET_URL}} -k ${{secrets.NUGET_API_KEY}} ./artifacts/*.nupkg

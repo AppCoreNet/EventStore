@@ -37,6 +37,9 @@
     <PackageVersion Include="AppCoreNet.Extensions.DependencyInjection.Abstractions" Version="0.7.0" />
     <PackageVersion Include="AppCoreNet.Data.EntityFrameworkCore" Version="0.7.0" />
 
+    <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.9" />
+
     <PackageVersion Include="Testcontainers.MsSql" Version="4.6.0" />
+    <PackageVersion Include="Testcontainers.EventStoreDb" Version="4.6.0" />
   </ItemGroup>
 </Project>

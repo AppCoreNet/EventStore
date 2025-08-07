@@ -43,6 +43,9 @@ public static class ModelBuilderExtensions
 
         eventStreamEntity.HasIndex(e => e.Sequence);
 
+        eventStreamEntity.Property(e => e.Deleted)
+                         .HasDefaultValue(0);
+
         EntityTypeBuilder<Event> eventEntity = builder.Entity<Event>();
 
         eventEntity.ToTable(nameof(Event), schema);

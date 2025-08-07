@@ -73,15 +73,17 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
                                    cancellationToken)
                                .ConfigureAwait(false);
 
-        switch (result.StatusCode)
+        switch (result.ResultCode)
         {
-            case 0:
+            case WriteEventsResultCode.Success:
                 break;
-            case -1:
+            case WriteEventsResultCode.InvalidStreamState:
                 throw new StreamStateException(streamId.Value, state);
+            case WriteEventsResultCode.StreamDeleted:
+                throw new StreamDeletedException(streamId.Value);
             default:
                 throw new NotImplementedException(
-                    $"Unknown status code '{result.StatusCode}' returned from stored procedure");
+                    $"Unknown status code '{result.ResultCode}' returned from stored procedure");
         }
     }
 
@@ -104,10 +106,11 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
             MaxCount = maxCount,
         };
 
-        IReadOnlyCollection<Model.Event> events = await query.ExecuteAsync(cancellationToken)
-                                                             .ConfigureAwait(false);
+        IReadOnlyCollection<Model.Event> events =
+            await query.ExecuteAsync(cancellationToken)
+                       .ConfigureAwait(false);
 
-        var result = new List<EventEnvelope>(maxCount);
+        var result = new List<EventEnvelope>(events.Count);
         foreach (Model.Event e in events)
         {
             result.Add(
@@ -153,6 +156,19 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
             await procedure.ExecuteAsync(cancellationToken)
                            .ConfigureAwait(false);
 
+        switch (result.ResultCode)
+        {
+            case WatchEventsResultCode.Success:
+                break;
+            case WatchEventsResultCode.StreamNotFound:
+                throw new StreamNotFoundException(streamId.Value);
+            case WriteEventsResultCode.StreamDeleted:
+                throw new StreamDeletedException(streamId.Value);
+            default:
+                throw new NotImplementedException(
+                    $"Unknown status code '{result.ResultCode}' returned from stored procedure");
+        }
+
         return result.Position.HasValue
             ? new WatchEventResult((long)result.Position)
             : null;
@@ -162,18 +178,26 @@ public sealed class SqlServerEventStore<TDbContext> : IEventStore
     public async Task DeleteAsync(StreamId streamId, CancellationToken cancellationToken = default)
     {
         Ensure.Arg.NotNull(streamId);
+        Ensure.Arg.NotWildcard(streamId);
 
         var command = new DeleteStreamCommand(_dbContext, _options.SchemaName)
         {
             StreamId = streamId,
         };
 
-        int affectedRows = await command.ExecuteAsync(cancellationToken)
-                                        .ConfigureAwait(false);
+        int result = await command.ExecuteAsync(cancellationToken)
+                                  .ConfigureAwait(false);
 
-        if (!streamId.IsWildcard && affectedRows == 0)
+        switch (result)
         {
-            throw new StreamNotFoundException(streamId.Value);
+            case DeleteStreamResultCode.Success:
+                break;
+            case DeleteStreamResultCode.StreamNotFound:
+                throw new StreamNotFoundException(streamId.Value);
+            case DeleteStreamResultCode.StreamAlreadyDeleted:
+                throw new StreamDeletedException(streamId.Value);
+            default:
+                throw new NotImplementedException();
         }
     }
 }

@@ -24,4 +24,12 @@ internal sealed class EventStream
     /// Gets the current index of the stream.
     /// </summary>
     public long Index { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the stream is deleted.
+    /// </summary>
+    /// <remarks>
+    /// 0 means the stream is active, 1 means it is deleted, 2 means it is tombstoned.
+    /// </remarks>
+    public int Deleted { get; init; }
 }

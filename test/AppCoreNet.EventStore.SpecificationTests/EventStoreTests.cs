@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using AppCoreNet.Extensions.DependencyInjection;
 using FluentAssertions;
@@ -12,8 +13,16 @@ using Xunit;
 
 namespace AppCoreNet.EventStore;
 
+#pragma warning disable IDISP006
+#pragma warning disable IDISP003
+
 public abstract class EventStoreTests : IAsyncLifetime
 {
+    private IServiceProvider? _serviceProvider;
+    private AsyncServiceScope _serviceScope;
+
+    protected IEventStore EventStore => _serviceScope.ServiceProvider.GetRequiredService<IEventStore>();
+
     protected ServiceProvider CreateServiceProvider()
     {
         var services = new ServiceCollection();
@@ -56,18 +65,18 @@ public abstract class EventStoreTests : IAsyncLifetime
         await DisposeAsync();
     }
 
-    protected virtual async Task InitializeAsync()
+    protected virtual Task InitializeAsync()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-        await eventStore.DeleteAsync(StreamId.All);
+        _serviceProvider = CreateServiceProvider();
+        _serviceScope = _serviceProvider.CreateAsyncScope();
+        return Task.CompletedTask;
     }
 
-    protected virtual Task DisposeAsync()
+    protected virtual async Task DisposeAsync()
     {
-        return Task.CompletedTask;
+        await _serviceScope.DisposeAsync();
+        if (_serviceProvider is IAsyncDisposable asyncDisposable)
+            await asyncDisposable.DisposeAsync();
     }
 
     [Theory]
@@ -75,21 +84,16 @@ public abstract class EventStoreTests : IAsyncLifetime
     [InlineData(-1L)]
     public async Task WritesInitialEvents(int stateValue)
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         string streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name")
+        ];
 
         StreamState state = CreateStreamState(stateValue);
-        await eventStore.WriteAsync(streamId, events, state);
+        await EventStore.WriteAsync(streamId, events, state);
     }
 
     [Theory]
@@ -97,46 +101,36 @@ public abstract class EventStoreTests : IAsyncLifetime
     [InlineData(0L)]
     public async Task WritesAdditionalEvents(int stateValue)
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         string streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        events = new[]
-        {
-            new EventEnvelope("TestRenamed", "new_name"),
-        };
+        events =
+        [
+            new("TestRenamed", "new_name")
+        ];
 
         StreamState state = CreateStreamState(stateValue);
-        await eventStore.WriteAsync(streamId, events, state);
+        await EventStore.WriteAsync(streamId, events, state);
     }
 
     [Fact]
     public async Task ThrowsWhenWritingInitialEventWithWrongPosition()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
 
         await Assert.ThrowsAsync<StreamStateException>(
-            async () => await eventStore.WriteAsync(streamId, events, StreamState.Index(0)));
+            async () => await EventStore.WriteAsync(streamId, events, StreamState.Index(0)));
     }
 
     [Theory]
@@ -144,51 +138,41 @@ public abstract class EventStoreTests : IAsyncLifetime
     [InlineData(1L)]
     public async Task ThrowsWhenWritingAdditionalEventWithWrongPosition(long stateValue)
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        events = new[]
-        {
-            new EventEnvelope("TestRenamed", "new_name"),
-        };
+        events =
+        [
+            new("TestRenamed", "new_name")
+        ];
 
         StreamState state = CreateStreamState(stateValue);
 
         await Assert.ThrowsAsync<StreamStateException>(
-            async () => await eventStore.WriteAsync(streamId, events, state));
+            async () => await EventStore.WriteAsync(streamId, events, state));
     }
 
     [Fact]
     public async Task ReadsEventsFromStreamStartForward()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-            new EventEnvelope("TestRenamed", "new_name_2"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name"),
+            new("TestRenamed", "new_name_2")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await EventStore.ReadAsync(
             streamId,
             StreamPosition.Start,
             StreamReadDirection.Forward,
@@ -199,41 +183,49 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         result.Should()
               .BeEquivalentTo(
-                  new[] { events[0], events[1] },
+                  [events[0], events[1]],
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
                        .Excluding(e => e.Metadata.Index)
                        .Excluding(e => e.Metadata.Sequence));
     }
 
-    [Theory]
-    [InlineData("*", 4)]
-    [InlineData("test-*", 2)]
-    [InlineData("*-test", 2)]
-    public async Task ReadsEventsFromWildcardStreamStartForward(string streamId, int expectedCount)
+    public static IEnumerable<object[]> GetReadsEventsFromWildcardStreamIds()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
+        string uniqueStreamId = Guid.NewGuid().ToString("N").Substring(0, 4);
+        string uniqueStreamId2 = Guid.NewGuid().ToString("N").Substring(0, 4);
+        string entityId1 = Guid.NewGuid().ToString("N");
+        string entityId2 = Guid.NewGuid().ToString("N");
 
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
+        return
+        [
+            [
+                $"test-{uniqueStreamId}-*",
+                $"test-{uniqueStreamId}-{entityId1}",
+                $"{entityId1}-test-{uniqueStreamId}", 2],
+            [
+                $"*-test-{uniqueStreamId2}",
+                $"test-{uniqueStreamId2}-{entityId2}",
+                $"{entityId2}-test-{uniqueStreamId2}", 2
+            ]
+        ];
+    }
 
-        StreamId streamId1 = $"test-{Guid.NewGuid():N}";
-        StreamId streamId2 = $"{Guid.NewGuid():N}-test";
+    [Theory]
+    [MemberData(nameof(GetReadsEventsFromWildcardStreamIds))]
+    public async Task ReadsEventsFromWildcardStreamStartForward(string readStreamId, string writeStreamId1, string writeStreamId2, int expectedCount)
+    {
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name")
+        ];
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-            new EventEnvelope("TestRenamed", "new_name_2"),
-        };
+        await EventStore.WriteAsync(writeStreamId1, events, StreamState.None);
+        await EventStore.WriteAsync(writeStreamId2, events, StreamState.None);
 
-        await eventStore.WriteAsync(streamId1, events, StreamState.None);
-        await eventStore.WriteAsync(streamId2, events, StreamState.None);
-
-        await eventStore.ReadAsync("$streams", StreamPosition.Start, StreamReadDirection.Forward);
-
-        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
-            streamId,
+        IReadOnlyCollection<EventEnvelope> result = await EventStore.ReadAsync(
+            readStreamId,
             StreamPosition.Start,
             StreamReadDirection.Forward,
             int.MaxValue);
@@ -243,7 +235,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         result.Should()
               .BeEquivalentTo(
-                  new[] { events[0], events[1] },
+                  [events[0], events[1]],
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
                        .Excluding(e => e.Metadata.Index)
@@ -253,23 +245,18 @@ public abstract class EventStoreTests : IAsyncLifetime
     [Fact]
     public async Task ReadsEventsFromStreamEndForward()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-            new EventEnvelope("TestRenamed", "new_name_2"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name"),
+            new("TestRenamed", "new_name_2")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await EventStore.ReadAsync(
             streamId,
             StreamPosition.End,
             StreamReadDirection.Forward,
@@ -280,7 +267,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         result.Should()
               .BeEquivalentTo(
-                  new[] { events[2] },
+                  [events[2]],
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
                        .Excluding(e => e.Metadata.Index)
@@ -290,23 +277,18 @@ public abstract class EventStoreTests : IAsyncLifetime
     [Fact]
     public async Task ReadsEventsFromStreamEndBackward()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-            new EventEnvelope("TestRenamed", "new_name_2"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name"),
+            new("TestRenamed", "new_name_2")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await EventStore.ReadAsync(
             streamId,
             StreamPosition.End,
             StreamReadDirection.Backward,
@@ -317,7 +299,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         result.Should()
               .BeEquivalentTo(
-                  new[] { events[2], events[1] },
+                  [events[2], events[1]],
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
                        .Excluding(e => e.Metadata.Index)
@@ -327,23 +309,18 @@ public abstract class EventStoreTests : IAsyncLifetime
     [Fact]
     public async Task ReadsEventsFromStreamStartBackward()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-            new EventEnvelope("TestRenamed", "new_name_2"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name"),
+            new("TestRenamed", "new_name_2")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await EventStore.ReadAsync(
             streamId,
             StreamPosition.Start,
             StreamReadDirection.Backward,
@@ -354,7 +331,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         result.Should()
               .BeEquivalentTo(
-                  new[] { events[0] },
+                  [events[0]],
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
                        .Excluding(e => e.Metadata.Index)
@@ -364,23 +341,18 @@ public abstract class EventStoreTests : IAsyncLifetime
     [Fact]
     public async Task ReadsEventsFromStreamForward()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-            new EventEnvelope("TestRenamed", "new_name_2"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name"),
+            new("TestRenamed", "new_name_2")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await EventStore.ReadAsync(
             streamId,
             StreamPosition.FromValue(1),
             StreamReadDirection.Forward,
@@ -391,7 +363,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         result.Should()
               .BeEquivalentTo(
-                  new[] { events[1], events[2] },
+                  [events[1], events[2]],
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
                        .Excluding(e => e.Metadata.Index)
@@ -401,23 +373,18 @@ public abstract class EventStoreTests : IAsyncLifetime
     [Fact]
     public async Task ReadsEventsFromStreamBackward()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-            new EventEnvelope("TestRenamed", "new_name_2"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name"),
+            new("TestRenamed", "new_name_2")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        IReadOnlyCollection<EventEnvelope> result = await eventStore.ReadAsync(
+        IReadOnlyCollection<EventEnvelope> result = await EventStore.ReadAsync(
             streamId,
             StreamPosition.FromValue(1),
             StreamReadDirection.Backward,
@@ -428,7 +395,7 @@ public abstract class EventStoreTests : IAsyncLifetime
 
         result.Should()
               .BeEquivalentTo(
-                  new[] { events[1], events[0] },
+                  [events[1], events[0]],
                   o =>
                       o.Excluding(e => e.Metadata.CreatedAt)
                        .Excluding(e => e.Metadata.Index)
@@ -444,32 +411,22 @@ public abstract class EventStoreTests : IAsyncLifetime
     [InlineData(0, StreamReadDirection.Backward)]
     public async Task ReadsEventsFromUnknownStreamThrows(long positionValue, StreamReadDirection direction)
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamPosition streamPosition = CreateStreamPosition(positionValue);
 
         StreamId streamId = Guid.NewGuid().ToString("N");
 
         await Assert.ThrowsAsync<StreamNotFoundException>(
-            async () => await eventStore.ReadAsync(streamId, streamPosition, direction));
+            async () => await EventStore.ReadAsync(streamId, streamPosition, direction));
     }
 
     [Fact]
-    public async Task WatchWithoutEventsReturnsNull()
+    public async Task WatchWildcardStreamWithoutEventsReturnsNull()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         TimeSpan timeout = TimeSpan.FromSeconds(1);
         Stopwatch watch = new();
         watch.Start();
 
-        WatchEventResult? result = await eventStore.WatchAsync("$all", StreamPosition.Start, timeout);
+        WatchEventResult? result = await EventStore.WatchAsync(StreamId.All, StreamPosition.End, timeout);
 
         result.Should()
               .BeNull();
@@ -479,44 +436,191 @@ public abstract class EventStoreTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task WatchWithEventsReturnsLatestVersion()
+    public async Task WatchWithoutEventsReturnsNull()
     {
-        await using ServiceProvider sp = CreateServiceProvider();
-        await using AsyncServiceScope scope = sp.CreateAsyncScope();
-
-        var eventStore = scope.ServiceProvider.GetRequiredService<IEventStore>();
-
         StreamId streamId = Guid.NewGuid().ToString("N");
 
-        var events = new[]
-        {
-            new EventEnvelope("TestCreated", "name"),
-            new EventEnvelope("TestRenamed", "new_name"),
-        };
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
 
-        await eventStore.WriteAsync(streamId, events, StreamState.None);
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
 
-        WatchEventResult? result = await eventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1));
+        TimeSpan timeout = TimeSpan.FromSeconds(1);
+        Stopwatch watch = new();
+        watch.Start();
 
-        result.Should()
-              .NotBeNull();
-
-        result!.Position.Should()
-              .Be(1);
-
-        WatchEventResult lastResult = result;
-
-        result = await eventStore.WatchAsync(streamId, result.Position, TimeSpan.FromSeconds(1));
+        WatchEventResult? result = await EventStore.WatchAsync(streamId, StreamPosition.End, timeout);
 
         result.Should()
               .BeNull();
 
-        await eventStore.WriteAsync(streamId + "-2", events, StreamState.None);
-        await eventStore.WriteAsync(streamId, events, StreamState.Index(1));
+        watch.Elapsed.Should()
+             .BeCloseTo(timeout, TimeSpan.FromMilliseconds(250));
+    }
 
-        result = await eventStore.WatchAsync(streamId, lastResult.Position, TimeSpan.FromSeconds(5));
-        lastResult = result!;
+    [Fact]
+    public async Task WatchUnknownStreamThrows()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+        await Assert.ThrowsAsync<StreamNotFoundException>(
+            async () => await EventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1)));
+    }
 
-        _ = await eventStore.WatchAsync(streamId, result!.Position, TimeSpan.FromSeconds(5));
+    [Fact]
+    public async Task WatchWithEventsReturnsLatestVersion()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name"),
+            new("TestRenamed", "new_name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
+
+        WatchEventResult? result = await EventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1));
+
+        result.Should()
+              .NotBeNull();
+    }
+
+    [Fact]
+    public async Task WatchWithNewEventsContinues()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
+
+        WatchEventResult? result = await EventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1));
+
+        result.Should()
+              .NotBeNull();
+
+        events =
+        [
+            new("TestRenamed", "name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.Any);
+
+        result = await EventStore.WatchAsync(streamId, result.Position, TimeSpan.FromSeconds(1));
+
+        result.Should()
+              .NotBeNull();
+
+        IReadOnlyCollection<EventEnvelope> readEvents = await EventStore.ReadAsync(streamId, result.Position);
+
+        readEvents.Should()
+                  .HaveCount(1);
+
+        EventEnvelope readEvent = readEvents.First();
+
+        readEvent.EventTypeName.Should().Be("TestRenamed");
+    }
+
+    [Fact]
+    public async Task ThrowsWhenDeletingUnknownStream()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        await Assert.ThrowsAsync<StreamNotFoundException>(
+            async () => await EventStore.DeleteAsync(streamId));
+    }
+
+    [Fact]
+    public async Task ThrowsWhenDeletingAlreadyDeletedStream()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
+
+        await EventStore.DeleteAsync(streamId);
+
+        await Assert.ThrowsAsync<StreamDeletedException>(
+            async () => await EventStore.DeleteAsync(streamId));
+    }
+
+    [Fact]
+    public async Task ThrowsWhenReadingEventsFromDeletedStream()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
+
+        await EventStore.DeleteAsync(streamId);
+
+        await Assert.ThrowsAsync<StreamDeletedException>(
+            async () => await EventStore.ReadAsync(streamId, StreamPosition.Start));
+    }
+
+    [Fact]
+    public async Task ThrowsWhenWatchingDeletedStream()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
+
+        await EventStore.DeleteAsync(streamId);
+
+        await Assert.ThrowsAsync<StreamDeletedException>(
+            async () => await EventStore.WatchAsync(streamId, StreamPosition.Start, TimeSpan.FromSeconds(1)));
+    }
+
+    [Fact]
+    public async Task DoesNoThrowWhenReadingEventsByWildcardFromDeletedStream()
+    {
+        StreamId streamId = "deleted-" + Guid.NewGuid().ToString("N");
+
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
+
+        await EventStore.DeleteAsync(streamId);
+
+        await EventStore.ReadAsync(StreamId.Prefix("deleted-"), StreamPosition.Start);
+    }
+
+    [Fact]
+    public async Task ThrowsWhenWritingEventsToDeletedStream()
+    {
+        StreamId streamId = Guid.NewGuid().ToString("N");
+
+        EventEnvelope[] events =
+        [
+            new("TestCreated", "name")
+        ];
+
+        await EventStore.WriteAsync(streamId, events, StreamState.None);
+
+        await EventStore.DeleteAsync(streamId);
+
+        await Assert.ThrowsAsync<StreamDeletedException>(
+            async () => await EventStore.WriteAsync(streamId, events, StreamState.Any));
     }
 }

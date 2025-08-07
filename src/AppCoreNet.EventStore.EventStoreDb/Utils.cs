@@ -15,7 +15,7 @@ internal static class Utils
             : global::EventStore.Client.StreamState.NoStream;
     }
 
-    public static Direction MapStreamReadDirection(StreamReadDirection direction)
+    public static Direction MapDirection(StreamReadDirection direction)
     {
         return direction switch
         {
@@ -23,6 +23,44 @@ internal static class Utils
             StreamReadDirection.Backward => Direction.Backwards,
             _ => throw new ArgumentOutOfRangeException(nameof(direction), $"Unsupported direction value: {direction}"),
         };
+    }
+
+    public static FromStream MapFromStream(StreamPosition position)
+    {
+        FromStream from;
+        if (position == StreamPosition.Start)
+        {
+            from = FromStream.Start;
+        }
+        else if (position == StreamPosition.End)
+        {
+            from = FromStream.End;
+        }
+        else
+        {
+            from = FromStream.After(MapStreamPosition(position));
+        }
+
+        return from;
+    }
+
+    public static FromAll MapFromAll(StreamPosition position)
+    {
+        FromAll from;
+        if (position == StreamPosition.Start)
+        {
+            from = FromAll.Start;
+        }
+        else if (position == StreamPosition.End)
+        {
+            from = FromAll.End;
+        }
+        else
+        {
+            from = FromAll.After(MapPosition(position));
+        }
+
+        return from;
     }
 
     public static global::EventStore.Client.StreamPosition MapStreamPosition(StreamPosition position)
@@ -85,7 +123,7 @@ internal static class Utils
     {
         object data = serializer.Deserialize(
             @event.EventType,
-            Encoding.UTF8.GetString(@event.Data.ToArray())) !;
+            Encoding.UTF8.GetString(@event.Data.ToArray()))!;
 
         string? metadataString = @event.Metadata.Length == 0
             ? null

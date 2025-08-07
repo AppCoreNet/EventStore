@@ -61,6 +61,7 @@ internal sealed class WriteEventsStoredProcedure : SqlStoredProcedure<Model.Writ
                  DECLARE @StreamKey AS INT;
                  DECLARE @StreamSequence AS BIGINT;
                  DECLARE @StreamIndex AS BIGINT;
+                 DECLARE @StreamDeleted AS INT;
                  DECLARE @LockResult AS INT;
 
                  IF @{nameof(StreamId)} is NULL RAISERROR('The value for parameter ''{nameof(StreamId)}'' must not be NULL', 16, 1)
@@ -71,18 +72,27 @@ internal sealed class WriteEventsStoredProcedure : SqlStoredProcedure<Model.Writ
                  SELECT
                     @StreamKey = Id,
                     @StreamSequence = [{nameof(Model.EventStream.Sequence)}],
-                    @StreamIndex = [{nameof(Model.EventStream.Index)}]
+                    @StreamIndex = [{nameof(Model.EventStream.Index)}],
+                    @StreamDeleted = [{nameof(Model.EventStream.Deleted)}]
                  FROM
                     [{schema}].[{nameof(Model.EventStream)}] WITH (UPDLOCK, ROWLOCK)
                  WHERE
                     [{nameof(Model.EventStream.StreamId)}] = @{nameof(StreamId)};
+
+                 IF @StreamIndex IS NOT NULL AND @StreamDeleted != 0
+                 BEGIN
+                    SELECT
+                        {WriteEventsResultCode.StreamDeleted} AS [{nameof(Model.WriteEventsResult.ResultCode)}],
+                        @StreamSequence AS [{nameof(Model.WriteEventsResult.Sequence)}],
+                        @StreamIndex AS [{nameof(Model.WriteEventsResult.Index)}];
+                 END
 
                  IF @{nameof(ExpectedPosition)} = -2
                  BEGIN
                      IF @StreamIndex IS NOT NULL
                      BEGIN
                          SELECT
-                            -1 AS [{nameof(Model.WriteEventsResult.StatusCode)}],
+                            {WriteEventsResultCode.InvalidStreamState} AS [{nameof(Model.WriteEventsResult.ResultCode)}],
                             @StreamSequence AS [{nameof(Model.WriteEventsResult.Sequence)}],
                             @StreamIndex AS [{nameof(Model.WriteEventsResult.Index)}];
                          RETURN;
@@ -93,7 +103,7 @@ internal sealed class WriteEventsStoredProcedure : SqlStoredProcedure<Model.Writ
                      IF @{nameof(ExpectedPosition)} != -1 AND ISNULL(@StreamIndex,-1) != @{nameof(ExpectedPosition)}
                      BEGIN
                          SELECT
-                            -1 AS [{nameof(Model.WriteEventsResult.StatusCode)}],
+                            {WriteEventsResultCode.InvalidStreamState} AS [{nameof(Model.WriteEventsResult.ResultCode)}],
                             @StreamSequence AS [{nameof(Model.WriteEventsResult.Sequence)}],
                             @StreamIndex AS [{nameof(Model.WriteEventsResult.Index)}];
                          RETURN;
@@ -149,7 +159,7 @@ internal sealed class WriteEventsStoredProcedure : SqlStoredProcedure<Model.Writ
                     Id = @StreamKey;
 
                  SELECT
-                    0 AS [{nameof(Model.WriteEventsResult.StatusCode)}],
+                    {WriteEventsResultCode.Success} AS [{nameof(Model.WriteEventsResult.ResultCode)}],
                     @StreamSequence AS [{nameof(Model.WriteEventsResult.Sequence)}],
                     @StreamIndex AS [{nameof(Model.WriteEventsResult.Index)}];
              END
