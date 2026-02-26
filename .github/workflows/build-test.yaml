@@ -50,12 +50,12 @@ jobs:
 #
       - name: Upload artifacts
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifacts
           path: ./artifacts
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.os }}
           path: ./test-results
@@ -83,7 +83,7 @@ jobs:
       - name: Run Integration Tests
         run: dotnet test --configuration ${{env.BUILD_CONFIGURATION}} --filter "Category=Integration" --logger trx --results-directory integration-test-results
       - name: Upload integration test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: integration-test-results
           path: ./integration-test-results
@@ -102,7 +102,7 @@ jobs:
             8.0.x
             9.0.x
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: artifacts
           path: ./artifacts
@@ -125,7 +125,7 @@ jobs:
             8.0.x
             9.0.x
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: artifacts
           path: ./artifacts
